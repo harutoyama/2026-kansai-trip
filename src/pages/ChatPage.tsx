@@ -1,0 +1,2 @@
+import { Bot } from 'lucide-react'
+export function ChatPage(){return <div><header><p className="text-sm font-bold text-sky-700">第2フェーズ</p><h1 className="text-2xl font-black">チャット</h1></header><section className="mt-5 card text-center"><Bot className="mx-auto text-sky-700" size={44}/><h2 className="mt-3 text-xl font-black">準備中</h2><p className="mt-2 text-sm leading-6 text-slate-600">旅行資料だけを参照し、引用元を表示するRAGチャットを後続フェーズで追加します。AI APIキーはブラウザには配置しません。</p></section></div>}
