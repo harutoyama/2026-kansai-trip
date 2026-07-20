@@ -1,6 +1,6 @@
 # データ設計書
 
-最終更新日: 2026-07-19
+最終更新日: 2026-07-20
 
 ## 1. 設計原則
 
@@ -34,7 +34,9 @@
 | `location` | string | 任意 | 表示用場所 |
 | `certainty` | enum | 必須 | `confirmed` / `candidate` / `undecided` |
 | `description` | string | 任意 | 補足。機微情報は禁止 |
-| `mapsQuery` | string | 任意 | Google Maps検索に適した文字列 |
+| `mapsQuery` | string | 任意 | Google Maps検索に適した文字列。ホテル・施設等に限定 |
+| `showMap` | boolean | 任意 | `false` の場合は地図リンクを禁止 |
+| `transport` | TransportDetail | 任意 | 便・列車の運行会社、系統、発着、番線、車両、座席、注意事項 |
 
 ### 3.2 TripGroup
 
@@ -172,3 +174,12 @@ delayed -> in_progress
 4. Supabaseプロジェクトを停止または削除するか判断する。
 5. GitHub Pagesの公開継続要否を判断する。
 6. 保存する場合も機微情報がないことを再確認する。
+
+## 10. 確定交通データの正本
+
+- 便・列車・座席は `src/data/trip.ts` の `TripEvent.transport` を正本とする。
+- 画面側へ時刻、番線、座席を重複定義しない。
+- `start` / `end` / `location` はスケジュール計算との互換性のため保持し、交通データ生成時に `transport.departure` / `transport.arrival` から作る。
+- 搭乗口、到着口、在来線番線など当日変動する値は「当日確認」として保存し、確定値を推測しない。
+- 座席は予約番号やQRコードではなく、公開可能な号車・座席番号のみ保持する。
+- 宿泊先は `tripStays` に施設名、宿泊日数、住所、地図検索語を保持する。

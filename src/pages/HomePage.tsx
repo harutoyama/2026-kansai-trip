@@ -186,7 +186,7 @@ export function HomePage() {
     );
   };
 
-  const mapQuery = current?.mapsQuery ?? current?.location ?? current?.title;
+  const mapQuery = current?.showMap === false ? null : current?.mapsQuery;
   const mapUrl = mapQuery
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
     : null;

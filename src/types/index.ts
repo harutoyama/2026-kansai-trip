@@ -1,5 +1,34 @@
 export type EventStatus = 'not_started' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'
 export type Certainty = 'confirmed' | 'candidate' | 'undecided'
+export type TransportMode = 'rail' | 'shinkansen' | 'limited-express' | 'flight' | 'subway' | 'transfer'
+
+export interface TransportEndpoint {
+  name: string
+  time: string
+  platform?: string
+  terminal?: string
+  note?: string
+}
+
+export interface SeatAssignment {
+  passenger: string
+  car?: string
+  seat: string
+}
+
+export interface TransportDetail {
+  mode: TransportMode
+  operator?: string
+  service?: string
+  serviceCode?: string
+  line?: string
+  departure: TransportEndpoint
+  arrival: TransportEndpoint
+  equipment?: string
+  stops?: string[]
+  seats?: SeatAssignment[]
+  notes?: string[]
+}
 
 export interface TripEvent {
   id: string
@@ -10,6 +39,8 @@ export interface TripEvent {
   certainty: Certainty
   description?: string
   mapsQuery?: string
+  showMap?: boolean
+  transport?: TransportDetail
 }
 
 export interface TripGroup {
