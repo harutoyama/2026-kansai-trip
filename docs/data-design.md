@@ -183,3 +183,30 @@ delayed -> in_progress
 - 搭乗口、到着口、在来線番線など当日変動する値は「当日確認」として保存し、確定値を推測しない。
 - 座席は予約番号やQRコードではなく、公開可能な号車・座席番号のみ保持する。
 - 宿泊先は `tripStays` に施設名、宿泊日数、住所、地図検索語を保持する。
+
+## 共同編集拡張（2026-07-20）
+
+### shared_pages
+
+| カラム | 型 | 制約・意味 |
+|---|---|---|
+| `slug` | text | `usj`、`dining`、`kyoto`の主キー |
+| `title` | text | 1から80文字 |
+| `description` | text | 300文字以下 |
+| `content` | text | 10000文字以下の共有本文 |
+| `updated_by` | text | 1から20文字 |
+| `updated_at` | timestamptz | 更新トリガーで自動設定 |
+
+### shared_memos
+
+| カラム | 型 | 制約・意味 |
+|---|---|---|
+| `id` | uuid | 主キー、既定値`gen_random_uuid()` |
+| `category` | text | `general`、`usj`、`dining`、`kyoto`、`transport` |
+| `title` | text | 1から120文字 |
+| `content` | text | 1から5000文字 |
+| `author` | text | 1から20文字 |
+| `created_at` | timestamptz | 作成日時 |
+| `updated_at` | timestamptz | 更新トリガーで自動設定 |
+
+`shared_pages`と`shared_memos`を`supabase_realtime` publicationへ追加する。クライアントはPostgres Changesを購読し、変更通知を受けたときに両テーブルを再取得する。同時編集の文字単位マージは行わず、最終書き込みを採用する。

@@ -168,3 +168,17 @@ GitHub Actions Secrets:
 - [ ] Secretsを削除するか判断
 - [ ] 文書に実運用上の知見を追記
 - [ ] 機微情報が残っていないことを再確認
+
+## 共同編集拡張（2026-07-20）
+
+### 本番前確認
+
+1. `supabase/schema.sql`をSQL Editorで実行する。
+2. GitHub Actionsへ`VITE_SUPABASE_URL`と`VITE_SUPABASE_ANON_KEY`を設定する。
+3. 2台の端末で作戦本文の更新、メモの追加、編集、削除を確認する。
+4. 片方の端末で変更し、もう片方へ自動反映されることを確認する。
+5. Supabase設定を外したビルドで、旅程と交通が引き続き閲覧できることを確認する。
+
+### 旅行終了後
+
+`shared_pages`と`shared_memos`の匿名insert、update、deleteポリシーを停止する。必要なデータをエクスポートした後、SupabaseプロジェクトとGitHub Pagesの公開継続要否を判断する。

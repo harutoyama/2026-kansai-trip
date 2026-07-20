@@ -1,8 +1,25 @@
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { ChatPage } from './pages/ChatPage'
-import { DocumentsPage } from './pages/DocumentsPage'
 import { HomePage } from './pages/HomePage'
 import { ItineraryPage } from './pages/ItineraryPage'
+import { NotesPage } from './pages/NotesPage'
+import { PlanningPage } from './pages/PlanningPage'
 import { TransportPage } from './pages/TransportPage'
-export default function App(){return <HashRouter><Routes><Route element={<Layout/>}><Route index element={<HomePage/>}/><Route path="itinerary" element={<ItineraryPage/>}/><Route path="transport" element={<TransportPage/>}/><Route path="documents" element={<DocumentsPage/>}/><Route path="chat" element={<ChatPage/>}/></Route></Routes></HashRouter>}
+
+export default function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="itinerary" element={<ItineraryPage />} />
+          <Route path="planning" element={<PlanningPage />} />
+          <Route path="transport" element={<TransportPage />} />
+          <Route path="notes" element={<NotesPage />} />
+          <Route path="documents" element={<Navigate to="/notes" replace />} />
+          <Route path="chat" element={<Navigate to="/notes" replace />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  )
+}

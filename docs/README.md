@@ -38,3 +38,7 @@
 ## 対象外
 
 この文書体系は、汎用旅行サービスや商用SaaS向けの完全な規制対応文書ではない。2026年8月20日から25日までの家族旅行を安全かつ確実に支援し、短期運用後に停止またはアーカイブできることを目的とする。
+
+## 共同編集拡張（2026-07-20）
+
+共同編集機能のSupabase設定と端末間同期テストは[`SUPABASE_SHARED_CONTENT_SETUP.md`](SUPABASE_SHARED_CONTENT_SETUP.md)を参照する。設計判断は[`adr/0004-shared-planning-and-feed.md`](adr/0004-shared-planning-and-feed.md)に記録する。
