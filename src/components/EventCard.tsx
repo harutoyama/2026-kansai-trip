@@ -1,27 +1,65 @@
-import { ExternalLink } from 'lucide-react'
-import type { TripEvent } from '../types'
+import type { TripEvent } from "../types";
 
-const certaintyLabels = { confirmed: '確定', candidate: '候補', undecided: '未定' }
+const certaintyLabels = {
+  confirmed: "確定",
+  candidate: "候補",
+  undecided: "未定",
+};
+
+function routeParts(location?: string) {
+  if (!location?.includes("→")) return null;
+  const parts = location
+    .split("→")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.length >= 2 ? [parts[0], parts.at(-1) ?? ""] : null;
+}
 
 export function EventCard({ event }: { event: TripEvent }) {
-  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapsQuery ?? event.location ?? event.title)}`
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapsQuery ?? event.location ?? event.title)}`;
+  const route = routeParts(event.location);
 
-  return <article className="card">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-sm font-bold text-sky-700">{event.start ?? '時刻未定'}{event.end ? `–${event.end}` : ''}</p>
-        <h3 className="mt-1 text-base font-bold">{event.title}</h3>
-        {event.location && <p className="mt-1 text-sm text-slate-600">{event.location}</p>}
+  return (
+    <article className="cinema-event-card">
+      <div className="cinema-event-head">
+        <div>
+          <p className="cinema-event-time">
+            {event.start ?? "時刻未定"}
+            {event.end ? `–${event.end}` : ""}
+          </p>
+          <h3>{event.title}</h3>
+        </div>
+        <span className={`cinema-certainty is-${event.certainty}`}>
+          {certaintyLabels[event.certainty]}
+        </span>
       </div>
-      <span className={`badge ${event.certainty === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : event.certainty === 'candidate' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>
-        {certaintyLabels[event.certainty]}
-      </span>
-    </div>
-    {event.description && <p className="mt-3 text-sm leading-6 text-slate-600">{event.description}</p>}
-    <div className="mt-4 flex flex-wrap gap-2">
-      <a className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 px-3 py-2 text-sm font-bold text-sky-700" href={maps} target="_blank" rel="noreferrer">
-        地図 <ExternalLink size={16} />
+
+      {route ? (
+        <div
+          className="cinema-route-line"
+          aria-label={`${route[0]}から${route[1]}まで`}
+        >
+          <strong>{route[0]}</strong>
+          <span aria-hidden="true" />
+          <strong>{route[1]}</strong>
+        </div>
+      ) : (
+        event.location && (
+          <p className="cinema-event-location">{event.location}</p>
+        )
+      )}
+
+      {event.description && (
+        <p className="cinema-event-description">{event.description}</p>
+      )}
+      <a
+        className="cinema-map-link"
+        href={maps}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Google Mapsで開く <span aria-hidden="true">↗</span>
       </a>
-    </div>
-  </article>
+    </article>
+  );
 }

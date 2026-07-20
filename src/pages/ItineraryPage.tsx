@@ -1,41 +1,97 @@
-import { useState } from 'react'
-import { EventCard } from '../components/EventCard'
-import { tripDays } from '../data/trip'
+import { useState } from "react";
+import { EventCard } from "../components/EventCard";
+import { tripDays } from "../data/trip";
 
 export function ItineraryPage() {
-  const [selected, setSelected] = useState(0)
-  const day = tripDays[selected]
+  const [selected, setSelected] = useState(0);
+  const day = tripDays[selected];
 
-  return <div>
-    <header>
-      <p className="text-sm font-bold text-sky-700">5泊6日</p>
-      <h1 className="text-2xl font-black">旅程</h1>
-    </header>
-    <div className="mt-4 flex gap-2 overflow-x-auto pb-2" role="tablist">
-      {tripDays.map((d, i) => <button key={d.date} role="tab" aria-selected={selected === i} onClick={() => setSelected(i)} className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold ${selected === i ? 'bg-sky-700 text-white' : 'border border-slate-300 bg-white'}`}>
-        8/{Number(d.date.slice(-2))}<br /><span className="text-xs">{d.dayNumber}日目</span>
-      </button>)}
+  return (
+    <div className="cinema-page">
+      <header className="cinema-page-header">
+        <p className="cinema-page-kicker">THE SIX-DAY JOURNEY</p>
+        <h1>旅程</h1>
+        <p>家族4人の予定を、日ごとの物語として確認します。</p>
+      </header>
+
+      <div className="cinema-tab-strip" role="tablist" aria-label="旅行日">
+        {tripDays.map((item, index) => (
+          <button
+            type="button"
+            key={item.date}
+            role="tab"
+            aria-selected={selected === index}
+            onClick={() => setSelected(index)}
+            className={selected === index ? "is-active" : ""}
+          >
+            <span>DAY {item.dayNumber}</span>
+            <strong>8/{Number(item.date.slice(-2))}</strong>
+          </button>
+        ))}
+      </div>
+
+      <section className="cinema-day-intro">
+        <p>{day.area}</p>
+        <h2>{day.summary}</h2>
+        {day.accommodation && <span>宿泊: {day.accommodation}</span>}
+      </section>
+
+      {day.groups?.map((group) => (
+        <section className="cinema-page-section" key={group.id}>
+          <div className="cinema-section-label">
+            <span>{group.label}</span>
+            <i />
+          </div>
+          {group.members && (
+            <p className="cinema-group-members">{group.members.join("・")}</p>
+          )}
+          <div className="cinema-event-list">
+            {group.events.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {day.commonEvents && (
+        <section className="cinema-page-section">
+          <div className="cinema-section-label">
+            <span>家族合流後</span>
+            <i />
+          </div>
+          <div className="cinema-event-list">
+            {day.commonEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {day.events && (
+        <section className="cinema-page-section">
+          <div className="cinema-section-label">
+            <span>家族共通タイムライン</span>
+            <i />
+          </div>
+          <div className="cinema-event-list">
+            {day.events.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {day.undecided && (
+        <section className="cinema-pending-card">
+          <p>TO BE DECIDED</p>
+          <h2>検討中</h2>
+          <ul>
+            {day.undecided.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
-    <section className="mt-4 card">
-      <p className="text-sm font-bold text-sky-700">{day.area}</p>
-      <h2 className="mt-1 text-xl font-black">{day.summary}</h2>
-      {day.accommodation && <p className="mt-2 text-sm text-slate-600">宿泊: {day.accommodation}</p>}
-    </section>
-    {day.groups?.map(g => <section className="mt-5" key={g.id}>
-      <h2 className="section-title">{g.label}{g.members ? `（${g.members.join('・')}）` : ''}</h2>
-      <div className="space-y-3">{g.events.map(e => <EventCard key={e.id} event={e} />)}</div>
-    </section>)}
-    {day.commonEvents && <section className="mt-5">
-      <h2 className="section-title">岡山合流後・家族共通</h2>
-      <div className="space-y-3">{day.commonEvents.map(e => <EventCard key={e.id} event={e} />)}</div>
-    </section>}
-    <section className="mt-5">
-      <h2 className="section-title">{day.groups ? 'その他' : '家族共通タイムライン'}</h2>
-      <div className="space-y-3">{day.events?.map(e => <EventCard key={e.id} event={e} />)}</div>
-    </section>
-    {day.undecided && <section className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
-      <h2 className="font-bold">検討中</h2>
-      <ul className="mt-2 list-disc pl-5 text-sm text-slate-600">{day.undecided.map(x => <li key={x}>{x}</li>)}</ul>
-    </section>}
-  </div>
+  );
 }

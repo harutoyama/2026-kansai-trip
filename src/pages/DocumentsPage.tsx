@@ -1,2 +1,45 @@
-import { FileText } from 'lucide-react'
-export function DocumentsPage(){const docs=[['旅行概要','旅行期間・宿泊先・主要移動をまとめた資料','./docs/trip-overview.md'],['Supabase設定','家族間同期を有効化するための手順','https://github.com/harutoyama/2026-kansai-trip#supabase設定']];return <div><header><p className="text-sm font-bold text-sky-700">オフライン対応</p><h1 className="text-2xl font-black">資料</h1></header><div className="mt-5 space-y-3">{docs.map(([title,desc,href])=><a key={title} href={href} target="_blank" rel="noreferrer" className="card flex min-h-24 items-center gap-4"><FileText className="shrink-0 text-sky-700"/><div><h2 className="font-bold">{title}</h2><p className="mt-1 text-sm text-slate-600">{desc}</p></div></a>)}</div></div>}
+const docs = [
+  [
+    "01",
+    "旅行概要",
+    "旅行期間・宿泊先・主要移動をまとめた資料",
+    "./docs/trip-overview.md",
+  ],
+  [
+    "02",
+    "Supabase設定",
+    "家族間同期を有効化するための手順",
+    "https://github.com/harutoyama/2026-kansai-trip#supabase設定",
+  ],
+] as const;
+
+export function DocumentsPage() {
+  return (
+    <div className="cinema-page">
+      <header className="cinema-page-header">
+        <p className="cinema-page-kicker">TRAVEL LIBRARY</p>
+        <h1>資料</h1>
+        <p>旅行中に必要な案内を、通信状態に左右されにくい形でまとめます。</p>
+      </header>
+      <div className="cinema-document-list">
+        {docs.map(([number, title, description, href]) => (
+          <a
+            key={title}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="cinema-document-card"
+          >
+            <span>{number}</span>
+            <div>
+              <small>TRAVEL DOCUMENT</small>
+              <h2>{title}</h2>
+              <p>{description}</p>
+            </div>
+            <b aria-hidden="true">↗</b>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}

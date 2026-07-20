@@ -1,3 +1,105 @@
-import { BedDouble, Plane, TrainFront } from 'lucide-react'
-const cards=[['Haru・往路','新幹線','東京 → 岡山','2026年8月20日','購入後に列車時刻を確定',TrainFront,'岡山駅'],['沖縄組・往路','航空機＋鉄道','沖縄 → 関西空港 → 岡山','2026年8月20日','航空便・接続列車は候補',Plane,'関西国際空港'],['宿泊 1','ホテル','淀屋橋周辺','8月20日〜23日（3泊）','相鉄フレッサイン',BedDouble,'相鉄フレッサイン 淀屋橋'],['宿泊 2','ホテル','USJ周辺','8月23日〜25日（2泊）','オリエンタルホテル',BedDouble,'オリエンタルホテル ユニバーサル・シティ'],['家族・復路','航空機','関西 → 沖縄','2026年8月25日','便名・時刻は確定後に更新',Plane,'関西国際空港']] as const
-export function TransportPage(){return <div><header><p className="text-sm font-bold text-sky-700">移動・宿泊</p><h1 className="text-2xl font-black">交通・宿泊</h1></header><div className="mt-5 space-y-3">{cards.map(([title,type,route,date,note,Icon,query])=><article className="card" key={title}><div className="flex items-center gap-3"><div className="rounded-xl bg-sky-100 p-3 text-sky-700"><Icon/></div><div><p className="text-xs font-bold text-slate-500">{type}</p><h2 className="font-black">{title}</h2></div></div><p className="mt-4 font-bold">{route}</p><p className="mt-1 text-sm text-slate-600">{date}</p><p className="mt-2 text-sm text-slate-600">{note}</p><a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`} className="mt-4 inline-flex items-center rounded-xl border border-sky-200 px-4 text-sm font-bold text-sky-700">Googleマップを開く</a></article>)}</div><p className="mt-4 text-xs leading-5 text-slate-500">予約番号、QRコード、電話番号などの機微情報は掲載しません。</p></div>}
+const cards = [
+  {
+    title: "Haru・往路",
+    type: "RAIL JOURNEY",
+    route: "東京 → 岡山",
+    date: "2026年8月20日",
+    note: "購入後に列車時刻を確定",
+    query: "岡山駅",
+    status: "時刻調整中",
+  },
+  {
+    title: "沖縄組・往路",
+    type: "AIR & RAIL",
+    route: "沖縄 → 関西空港 → 岡山",
+    date: "2026年8月20日",
+    note: "航空便・接続列車は候補",
+    query: "関西国際空港",
+    status: "接続確認中",
+  },
+  {
+    title: "宿泊 1",
+    type: "STAY",
+    route: "淀屋橋周辺",
+    date: "8月20日〜23日（3泊）",
+    note: "相鉄フレッサイン",
+    query: "相鉄フレッサイン 淀屋橋",
+    status: "確定",
+  },
+  {
+    title: "宿泊 2",
+    type: "STAY",
+    route: "USJ周辺",
+    date: "8月23日〜25日（2泊）",
+    note: "オリエンタルホテル",
+    query: "オリエンタルホテル ユニバーサル・シティ",
+    status: "確定",
+  },
+  {
+    title: "家族・復路",
+    type: "RETURN FLIGHT",
+    route: "関西 → 沖縄",
+    date: "2026年8月25日",
+    note: "便名・時刻は確定後に更新",
+    query: "関西国際空港",
+    status: "時刻調整中",
+  },
+] as const;
+
+export function TransportPage() {
+  return (
+    <div className="cinema-page">
+      <header className="cinema-page-header">
+        <p className="cinema-page-kicker">ROUTES & STAYS</p>
+        <h1>交通・宿泊</h1>
+        <p>移動区間、日付、予約状態を一つの画面に集約します。</p>
+      </header>
+
+      <div className="cinema-transport-list">
+        {cards.map((card, index) => {
+          const stops = card.route.split("→").map((part) => part.trim());
+          return (
+            <article className="cinema-transport-card" key={card.title}>
+              <div className="cinema-transport-meta">
+                <span>
+                  {String(index + 1).padStart(2, "0")} / {card.type}
+                </span>
+                <b>{card.status}</b>
+              </div>
+              <h2>{card.title}</h2>
+              {stops.length >= 2 ? (
+                <div className="cinema-transport-route">
+                  <strong>{stops[0]}</strong>
+                  <i aria-hidden="true" />
+                  <strong>{stops.at(-1)}</strong>
+                </div>
+              ) : (
+                <p className="cinema-stay-place">{card.route}</p>
+              )}
+              <div className="cinema-transport-details">
+                <p>
+                  <small>DATE</small>
+                  {card.date}
+                </p>
+                <p>
+                  <small>DETAIL</small>
+                  {card.note}
+                </p>
+              </div>
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(card.query)}`}
+              >
+                場所をGoogle Mapsで確認 <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+          );
+        })}
+      </div>
+      <p className="cinema-security-note">
+        予約番号、QRコード、電話番号などの機微情報は掲載しません。
+      </p>
+    </div>
+  );
+}
