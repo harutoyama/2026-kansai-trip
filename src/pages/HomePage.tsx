@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ScenicBackdrop } from "../components/ScenicBackdrop";
+import { useSharedContent } from "../hooks/useSharedContent";
 import { tripDays } from "../data/trip";
 import { dayEvents, formatRemaining, getScheduleState } from "../lib/schedule";
 import type { ScheduleState } from "../lib/schedule";
@@ -96,6 +97,187 @@ function splitRoute(location?: string) {
       .filter(Boolean) ?? [];
   if (parts.length >= 2) return [parts[0], parts.at(-1) ?? "目的地"] as const;
   return [location ?? "関西の旅", "次の目的地"] as const;
+}
+
+const tripStartsAt = new Date("2026-08-20T00:00:00+09:00");
+
+function compactSharedText(value: string, maxLength = 92) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, maxLength)}…`
+    : normalized;
+}
+
+function formatSharedUpdate(value: string) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(new Date(value));
+}
+
+function PreTripHome({ now }: { now: Date }) {
+  const { pages, memos, configured, loading } = useSharedContent();
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((tripStartsAt.getTime() - now.getTime()) / 86400000),
+  );
+  const syncLabel = loading
+    ? "同期データ読込中"
+    : configured
+      ? "家族間同期中"
+      : "共有設定待ち";
+  const decisions = [
+    {
+      key: "usj",
+      kicker: "USJ · 8月24日",
+      title: "朝一番の攻略方針を決める",
+      description: compactSharedText(pages.usj.content),
+      icon: "★",
+      to: "/planning",
+    },
+    {
+      key: "dining",
+      kicker: "京都・大阪 · 食事",
+      title: "家族4人で行く店を比較する",
+      description: compactSharedText(pages.dining.content),
+      icon: "食",
+      to: "/planning",
+    },
+    {
+      key: "kyoto",
+      kicker: "京都 · 観光",
+      title: "暑さを考慮した一日を組む",
+      description: compactSharedText(pages.kyoto.content),
+      icon: "京",
+      to: "/planning",
+    },
+  ];
+  const highlights = [pages.usj, pages.dining, pages.kyoto];
+  const recentMemos = memos.slice(0, 3);
+
+  return (
+    <div className="pretrip-home">
+      <header className="pretrip-hero">
+        <ScenicBackdrop />
+        <div className="pretrip-hero-overlay" />
+        <div className="pretrip-topbar">
+          <p>Kansai Journal</p>
+          <span className={configured ? "is-online" : "is-offline"}>
+            <i aria-hidden="true" />
+            {syncLabel}
+          </span>
+        </div>
+        <div className="pretrip-hero-copy">
+          <p>20–25 August 2026 · Family of four</p>
+          <h1>
+            移動の記録から、
+            <br />
+            家族でつくる旅へ。
+          </h1>
+        </div>
+        <div className="pretrip-hero-bottom">
+          <div aria-label="主な旅行先">
+            <span>大阪</span>
+            <span>京都</span>
+            <span>岡山</span>
+            <span>USJ</span>
+          </div>
+          <p>
+            <strong>{daysLeft}</strong>
+            days to go
+          </p>
+        </div>
+      </header>
+
+      <div className="pretrip-content">
+        {!configured && (
+          <section className="pretrip-setup-alert" role="status">
+            <strong>共同編集の初期設定が未完了です</strong>
+            <p>
+              SupabaseのSQL適用とGitHub ActionsのRepository secrets登録後に、作戦とメモを家族で編集できます。
+            </p>
+          </section>
+        )}
+
+        <section className="pretrip-section" aria-labelledby="pretrip-decisions-title">
+          <div className="pretrip-section-heading">
+            <div>
+              <p>DECISIONS</p>
+              <h2 id="pretrip-decisions-title">今、家族で決めたいこと</h2>
+            </div>
+            <Link to="/planning">すべて見る</Link>
+          </div>
+          <div className="pretrip-decision-grid">
+            {decisions.map((decision) => (
+              <Link className="pretrip-decision-card" key={decision.key} to={decision.to}>
+                <span className="pretrip-decision-icon" aria-hidden="true">
+                  {decision.icon}
+                </span>
+                <span>
+                  <small>{decision.kicker}</small>
+                  <strong>{decision.title}</strong>
+                  <em>{decision.description}</em>
+                </span>
+                <b aria-hidden="true">›</b>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="pretrip-section" aria-labelledby="pretrip-strategy-title">
+          <div className="pretrip-section-heading">
+            <div>
+              <p>SHARED PLAYBOOK</p>
+              <h2 id="pretrip-strategy-title">共有中の作戦</h2>
+            </div>
+            <Link to="/planning">編集する</Link>
+          </div>
+          <div className="pretrip-highlight-scroll">
+            {highlights.map((page, index) => (
+              <Link className={`pretrip-highlight-card is-${index + 1}`} key={page.slug} to="/planning">
+                <small>{page.slug.toUpperCase()}</small>
+                <h3>{page.title}</h3>
+                <p>{compactSharedText(page.content, 126)}</p>
+                <span>{page.updated_by}さんが更新</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="pretrip-section" aria-labelledby="pretrip-updates-title">
+          <div className="pretrip-section-heading">
+            <div>
+              <p>FAMILY UPDATES</p>
+              <h2 id="pretrip-updates-title">家族の最近の更新</h2>
+            </div>
+            <Link to="/notes">メモを開く</Link>
+          </div>
+          <div className="pretrip-update-list" aria-busy={loading}>
+            {recentMemos.length > 0 ? (
+              recentMemos.map((memo) => (
+                <Link key={memo.id} to={`/notes?category=${memo.category}`}>
+                  <span aria-hidden="true">{memo.author.slice(0, 1)}</span>
+                  <div>
+                    <p>
+                      <strong>{memo.author}</strong>
+                      <small>{formatSharedUpdate(memo.updated_at)}</small>
+                    </p>
+                    <h3>{memo.title}</h3>
+                    <div>{compactSharedText(memo.content, 108)}</div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <p className="pretrip-empty">共有メモはまだありません。</p>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 export function HomePage() {
@@ -196,6 +378,10 @@ export function HomePage() {
     day: "numeric",
     weekday: "short",
   }).format(now);
+
+  if (state.kind === "before_trip") {
+    return <PreTripHome now={now} />;
+  }
 
   return (
     <div className="cinema-home">
