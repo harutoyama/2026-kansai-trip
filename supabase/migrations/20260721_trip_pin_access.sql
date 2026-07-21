@@ -4,22 +4,37 @@ create schema if not exists private;
 create table if not exists private.trip_access_config (
   singleton boolean primary key default true check (singleton),
   pin_hash text not null,
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default pg_catalog.now()
 );
 
 create table if not exists private.trip_access_members (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  authorized_at timestamptz not null default now(),
+  authorized_at timestamptz not null default pg_catalog.now(),
   expires_at timestamptz not null
 );
 
+alter table private.trip_access_config enable row level security;
+alter table private.trip_access_members enable row level security;
+
+revoke all on schema private from public, anon, authenticated;
+revoke all on table private.trip_access_config from public, anon, authenticated;
+revoke all on table private.trip_access_members from public, anon, authenticated;
+
 -- Configure the PIN only through a private, uncommitted SQL script.
+
+do $$
+begin
+  if pg_catalog.to_regprocedure('extensions.crypt(text,text)') is null then
+    raise exception 'pgcrypto function extensions.crypt(text,text) is unavailable';
+  end if;
+end
+$$;
 
 create or replace function public.verify_trip_pin(input_pin text)
 returns boolean
 language plpgsql
 security definer
-set search_path = public, private
+set search_path = ''
 as $$
 declare
   configured_hash text;
@@ -32,25 +47,30 @@ begin
   end if;
 
   if input_pin is null or input_pin !~ '^[0-9]{4}$' then
-    perform pg_sleep(0.35);
+    perform pg_catalog.pg_sleep(0.35);
     return false;
   end if;
 
-  select pin_hash
+  select config.pin_hash
   into configured_hash
-  from private.trip_access_config
-  where singleton = true;
+  from private.trip_access_config as config
+  where config.singleton = true;
 
-  if configured_hash is null or crypt(input_pin, configured_hash) <> configured_hash then
-    perform pg_sleep(0.35);
+  if configured_hash is null
+    or extensions.crypt(input_pin, configured_hash) <> configured_hash then
+    perform pg_catalog.pg_sleep(0.35);
     return false;
   end if;
 
-  delete from private.trip_access_members
-  where expires_at <= now();
+  delete from private.trip_access_members as members
+  where members.expires_at <= pg_catalog.now();
 
   insert into private.trip_access_members (user_id, authorized_at, expires_at)
-  values (current_user_id, now(), now() + interval '180 days')
+  values (
+    current_user_id,
+    pg_catalog.now(),
+    pg_catalog.now() + interval '180 days'
+  )
   on conflict (user_id) do update
   set authorized_at = excluded.authorized_at,
       expires_at = excluded.expires_at;
@@ -64,13 +84,13 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public, private
+set search_path = ''
 as $$
   select exists (
     select 1
-    from private.trip_access_members
-    where user_id = auth.uid()
-      and expires_at > now()
+    from private.trip_access_members as members
+    where members.user_id = (select auth.uid())
+      and members.expires_at > pg_catalog.now()
   );
 $$;
 
@@ -79,14 +99,14 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public, private
+set search_path = ''
 as $$
   select public.has_valid_trip_access();
 $$;
 
-revoke all on function public.verify_trip_pin(text) from public;
-revoke all on function public.has_valid_trip_access() from public;
-revoke all on function public.validate_trip_access() from public;
+revoke execute on function public.verify_trip_pin(text) from public, anon, authenticated;
+revoke execute on function public.has_valid_trip_access() from public, anon, authenticated;
+revoke execute on function public.validate_trip_access() from public, anon, authenticated;
 
 grant execute on function public.verify_trip_pin(text) to authenticated;
 grant execute on function public.has_valid_trip_access() to authenticated;
@@ -107,17 +127,17 @@ drop policy if exists "family read" on public.event_progress;
 drop policy if exists "family insert" on public.event_progress;
 drop policy if exists "family update" on public.event_progress;
 create policy "family read" on public.event_progress for select to authenticated
-using (public.has_valid_trip_access());
+using ((select public.has_valid_trip_access()));
 create policy "family insert" on public.event_progress for insert to authenticated
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and char_length(event_id) between 1 and 100
   and delay_minutes between 0 and 1440
 );
 create policy "family update" on public.event_progress for update to authenticated
-using (public.has_valid_trip_access())
+using ((select public.has_valid_trip_access()))
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and char_length(event_id) between 1 and 100
   and delay_minutes between 0 and 1440
 );
@@ -129,18 +149,18 @@ drop policy if exists "family read shared pages" on public.shared_pages;
 drop policy if exists "family insert shared pages" on public.shared_pages;
 drop policy if exists "family update shared pages" on public.shared_pages;
 create policy "family read shared pages" on public.shared_pages for select to authenticated
-using (public.has_valid_trip_access());
+using ((select public.has_valid_trip_access()));
 create policy "family insert shared pages" on public.shared_pages for insert to authenticated
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and slug in ('usj', 'dining', 'kyoto')
   and char_length(content) <= 10000
   and char_length(updated_by) between 1 and 20
 );
 create policy "family update shared pages" on public.shared_pages for update to authenticated
-using (public.has_valid_trip_access())
+using ((select public.has_valid_trip_access()))
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and slug in ('usj', 'dining', 'kyoto')
   and char_length(content) <= 10000
   and char_length(updated_by) between 1 and 20
@@ -155,23 +175,23 @@ drop policy if exists "family insert shared memos" on public.shared_memos;
 drop policy if exists "family update shared memos" on public.shared_memos;
 drop policy if exists "family delete shared memos" on public.shared_memos;
 create policy "family read shared memos" on public.shared_memos for select to authenticated
-using (public.has_valid_trip_access());
+using ((select public.has_valid_trip_access()));
 create policy "family insert shared memos" on public.shared_memos for insert to authenticated
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and category in ('general', 'usj', 'dining', 'kyoto', 'transport')
   and char_length(title) between 1 and 120
   and char_length(content) between 1 and 5000
   and char_length(author) between 1 and 20
 );
 create policy "family update shared memos" on public.shared_memos for update to authenticated
-using (public.has_valid_trip_access())
+using ((select public.has_valid_trip_access()))
 with check (
-  public.has_valid_trip_access()
+  (select public.has_valid_trip_access())
   and category in ('general', 'usj', 'dining', 'kyoto', 'transport')
   and char_length(title) between 1 and 120
   and char_length(content) between 1 and 5000
   and char_length(author) between 1 and 20
 );
 create policy "family delete shared memos" on public.shared_memos for delete to authenticated
-using (public.has_valid_trip_access());
+using ((select public.has_valid_trip_access()));

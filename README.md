@@ -33,12 +33,16 @@ npm run dev
 共同編集と端末間同期にはSupabaseが必要です。
 
 1. Supabaseでプロジェクトを作成する。
-2. SQL Editorで [`supabase/schema.sql`](supabase/schema.sql) の全内容を実行する。
-3. GitHubリポジトリの **Settings → Secrets and variables → Actions** に次を登録する。
+2. Supabase AuthのAnonymous Sign-insを有効にする。
+3. SQL Editorで [`supabase/schema.sql`](supabase/schema.sql) の全内容を実行する。
+4. PIN値を含む非公開SQLを管理者だけがSQL Editorで実行する。
+5. GitHubリポジトリの **Settings → Secrets and variables → Actions** に次を登録する。
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-4. `main`へpushし、GitHub Pagesの再デプロイ完了を待つ。
-5. 2台の端末で同じURLを開き、共有メモの投稿が反映されることを確認する。
+6. `main`へpushし、GitHub Pagesの再デプロイ完了を待つ。
+7. 2台の端末で同じURLを開き、PIN認証と共有メモの同期を確認する。
+
+既存のSupabaseプロジェクトへPIN修正を適用する場合は、[`supabase/migrations/20260721_trip_pin_access_fix.sql`](supabase/migrations/20260721_trip_pin_access_fix.sql)をSQL Editorで1回実行します。
 
 詳しい確認手順は [`docs/SUPABASE_SHARED_CONTENT_SETUP.md`](docs/SUPABASE_SHARED_CONTENT_SETUP.md) を参照してください。
 
@@ -54,15 +58,13 @@ Supabase未設定でも、既存旅程、交通、宿泊、天気、地図、共
 
 このサイトは公開URLです。予約番号、QRコード、電話番号、自宅住所などの機微情報をコミットまたは投稿しないでください。
 
-共同編集テーブルは、アカウントを作らずに家族全員が操作できるよう、Supabaseの匿名ロールに読み取り、追加、更新を許可しています。共有メモは削除も可能です。URLと公開キーを知る第三者にも同じ権限があるため、旅行終了後は匿名書き込みポリシーを停止してください。
+Supabaseの公開クライアントキー自体は秘密情報ではありません。共同編集テーブルは、Supabase Authで匿名サインインしたユーザーのうち、家族用PINの検証に成功し、有効期限内のアクセス記録を持つセッションだけが操作できます。未認証の`anon`データベースロールには共同編集テーブルとPIN検証RPCの権限を与えません。
 
 ## 家族用PIN認証
 
 WebページはSupabase上でPINを検証し、認証成功した匿名認証ユーザーを180日間有効として登録します。Supabase Authがセッションをブラウザへ保存するため、同じブラウザでは通常、次回以降のPIN入力は不要です。
 
-初回導入時はSupabase Authの匿名サインインを有効にし、更新ZIPがDownloadsへ生成する非公開SQLをSupabase SQL Editorで実行してください。公開リポジトリ内のmigrationにはPIN値を含めません。
-
-このSQLは既存の匿名RLSポリシーを、PIN認証済みのSupabaseセッションだけが利用できるポリシーへ置換します。PINはSupabase内でbcryptハッシュとして保存されます。
+PINはSupabase内でbcryptハッシュとして保存し、平文PINを公開リポジトリへ含めません。PIN検証関数は`SECURITY DEFINER`として動作するため、空の`search_path`とスキーマ完全修飾を使用します。`pgcrypto`の`crypt()`は`extensions.crypt()`として明示的に呼び出します。
 
 注意事項:
 
