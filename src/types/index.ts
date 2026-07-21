@@ -30,6 +30,11 @@ export interface TransportDetail {
   notes?: string[]
 }
 
+export interface TripEventDetail {
+  label: string
+  value: string
+}
+
 export interface TripEvent {
   id: string
   title: string
@@ -38,6 +43,7 @@ export interface TripEvent {
   location?: string
   certainty: Certainty
   description?: string
+  details?: TripEventDetail[]
   mapsQuery?: string
   showMap?: boolean
   transport?: TransportDetail

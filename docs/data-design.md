@@ -1,6 +1,6 @@
 # データ設計書
 
-最終更新日: 2026-07-20
+最終更新日: 2026-07-21
 
 ## 1. 設計原則
 
@@ -33,7 +33,8 @@
 | `end` | string | 任意 | `HH:mm` を原則とする |
 | `location` | string | 任意 | 表示用場所 |
 | `certainty` | enum | 必須 | `confirmed` / `candidate` / `undecided` |
-| `description` | string | 任意 | 補足。機微情報は禁止 |
+| `description` | string | 任意 | カード上に常時表示する短い補足。機微情報は禁止 |
+| `details` | TripEventDetail[] | 任意 | 住所など通常は折りたたす施設詳細。ラベルと値の組で保持 |
 | `mapsQuery` | string | 任意 | Google Maps検索に適した文字列。ホテル・施設等に限定 |
 | `showMap` | boolean | 任意 | `false` の場合は地図リンクを禁止 |
 | `transport` | TransportDetail | 任意 | 便・列車の運行会社、系統、発着、番線、車両、座席、注意事項 |
@@ -183,6 +184,7 @@ delayed -> in_progress
 - 搭乗口、到着口、在来線番線など当日変動する値は「当日確認」として保存し、確定値を推測しない。
 - 座席は予約番号やQRコードではなく、公開可能な号車・座席番号のみ保持する。
 - 宿泊先は `tripStays` に施設名、宿泊日数、住所、地図検索語を保持する。
+- 住所などの施設詳細は折りたたみの「詳細」内に表示し、Google Mapsボタンは折りたたみ外へ常時表示する。
 
 ## 共同編集拡張（2026-07-20）
 

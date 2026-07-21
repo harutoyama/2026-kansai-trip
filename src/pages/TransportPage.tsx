@@ -1,4 +1,4 @@
-import { CalendarRange, ExternalLink, Hotel, MapPin } from 'lucide-react'
+import { CalendarRange, ChevronDown, ExternalLink, Hotel } from 'lucide-react'
 import { EventCard } from '../components/EventCard'
 import { tripDays, tripStays } from '../data/trip'
 
@@ -63,7 +63,17 @@ export function TransportPage() {
                   <i aria-hidden="true" />
                   <div><small>CHECK OUT</small><strong>{formatDate(stay.checkOut)}</strong></div>
                 </div>
-                <p className="cinema-stay-address"><MapPin size={15} strokeWidth={1.8} aria-hidden="true" /> {stay.address}</p>
+                <details className="cinema-event-details cinema-stay-details">
+                  <summary>
+                    <span>詳細</span>
+                    <ChevronDown size={16} strokeWidth={1.8} aria-hidden="true" />
+                  </summary>
+                  <div className="cinema-event-details-body">
+                    <dl>
+                      <div><dt>住所</dt><dd>{stay.address}</dd></div>
+                    </dl>
+                  </div>
+                </details>
                 <a href={maps} target="_blank" rel="noreferrer">
                   Google Mapsで開く <ExternalLink size={13} strokeWidth={1.8} aria-hidden="true" />
                 </a>

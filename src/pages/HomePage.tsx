@@ -238,10 +238,12 @@ function PreTripHome({ now }: { now: Date }) {
           <div className="pretrip-highlight-scroll">
             {highlights.map((page, index) => (
               <Link className={`pretrip-highlight-card is-${index + 1}`} key={page.slug} to="/planning">
-                <small>{page.slug.toUpperCase()}</small>
+                <div className="pretrip-highlight-meta">
+                  <small>{page.slug.toUpperCase()}</small>
+                  <span>{page.updated_by}さんが更新</span>
+                </div>
                 <h3>{page.title}</h3>
                 <p>{compactSharedText(page.content, 126)}</p>
-                <span>{page.updated_by}さんが更新</span>
               </Link>
             ))}
           </div>

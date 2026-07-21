@@ -20,9 +20,9 @@ export const tripDays: TripDay[] = [
   {
     date: '2026-08-20',
     dayNumber: 1,
-    summary: '東京・沖縄から新大阪で合流し、岡山往復後に淀屋橋へ',
+    summary: '東京・沖縄から新大阪で合流し、岡山往復後に北浜へ',
     area: '東京・関西空港・新大阪・岡山・西大寺・大阪',
-    accommodation: '相鉄フレッサイン 淀屋橋（1泊目／3泊）',
+    accommodation: '相鉄フレッサイン 北浜（1泊目／3泊）',
     groups: [
       {
         id: 'haru',
@@ -204,28 +204,31 @@ export const tripDays: TripDay[] = [
             { passenger: '4名', car: '14号車', seat: '5D' },
             { passenger: '4名', car: '14号車', seat: '5E' }
           ],
-          notes: ['岡山18:39着・18:40発', '新大阪到着後は大阪メトロ御堂筋線で淀屋橋方面へ移動']
+          notes: ['岡山18:39着・18:40発', '新大阪到着後は大阪メトロで北浜方面へ移動']
         }
       }),
       {
         id: '20260820-family-shinosaka-yodoyabashi',
-        title: '新大阪から淀屋橋へ移動',
+        title: '新大阪から北浜へ移動',
         start: '19:40',
         end: '20:10',
-        location: '新大阪 → 淀屋橋',
+        location: '新大阪 → 北浜',
         certainty: 'candidate',
-        description: '大阪メトロ御堂筋線を利用する想定。新幹線の遅延に応じて発車時刻を当日選ぶ。',
+        description: '大阪メトロを利用する想定。新幹線の遅延に応じて発車時刻を当日選ぶ。',
         showMap: false
       },
       {
         id: '20260820-hotel-checkin',
-        title: '相鉄フレッサイン淀屋橋へチェックイン',
+        title: '相鉄フレッサイン北浜へチェックイン',
         start: '20:10',
         end: '20:40',
-        location: '相鉄フレッサイン 淀屋橋',
+        location: '相鉄フレッサイン 北浜',
         certainty: 'confirmed',
-        description: '〒541-0041 大阪府大阪市中央区北浜3丁目2-23。8月20日から23日まで3泊。',
-        mapsQuery: '相鉄フレッサイン 淀屋橋 大阪府大阪市中央区北浜3丁目2-23',
+        description: '8月20日から23日まで3泊。',
+        details: [
+          { label: '住所', value: '〒541-0043 大阪府大阪市中央区高麗橋2丁目4-10' }
+        ],
+        mapsQuery: '相鉄フレッサイン 北浜 大阪府大阪市中央区高麗橋2丁目4-10',
         showMap: true
       }
     ],
@@ -236,9 +239,9 @@ export const tripDays: TripDay[] = [
     dayNumber: 2,
     summary: '大阪市内をゆっくり観光',
     area: '大阪',
-    accommodation: '相鉄フレッサイン 淀屋橋（2泊目／3泊）',
+    accommodation: '相鉄フレッサイン 北浜（2泊目／3泊）',
     events: [
-      { id: '20260821-breakfast', title: '朝食・出発準備', start: '08:00', end: '09:30', location: '淀屋橋周辺', certainty: 'candidate', showMap: false },
+      { id: '20260821-breakfast', title: '朝食・出発準備', start: '08:00', end: '09:30', location: '北浜周辺', certainty: 'candidate', showMap: false },
       { id: '20260821-sightseeing', title: '大阪市内観光', start: '10:00', end: '16:30', location: '大阪市内', certainty: 'undecided', description: '訪問先は家族で検討中。', showMap: false },
       { id: '20260821-dinner', title: '夕食', start: '18:00', end: '20:00', location: '大阪市内', certainty: 'candidate', showMap: false }
     ],
@@ -249,7 +252,7 @@ export const tripDays: TripDay[] = [
     dayNumber: 3,
     summary: '心斎橋でコナン脱出ゲーム、その後は大阪市内',
     area: '大阪・心斎橋',
-    accommodation: '相鉄フレッサイン 淀屋橋（3泊目／3泊）',
+    accommodation: '相鉄フレッサイン 北浜（3泊目／3泊）',
     events: [
       {
         id: '20260822-conan-escape',
@@ -258,24 +261,27 @@ export const tripDays: TripDay[] = [
         end: '12:00',
         location: 'リアル脱出ゲーム大阪心斎橋店',
         certainty: 'confirmed',
-        description: '10:00公演。9:50までの受付完了を目標とし、9:30頃に会場到着。〒542-0086 大阪府大阪市中央区西心斎橋2-11-30 ブルータスビル6F。終了時刻は進行により前後するため12:00まで確保。',
+        description: '10:00公演。9:50までの受付完了を目標とし、9:30頃に会場到着。終了時刻は進行により前後するため12:00まで確保。',
+        details: [
+          { label: '住所', value: '〒542-0086 大阪府大阪市中央区西心斎橋2-11-30 ブルータスビル6F' }
+        ],
         mapsQuery: 'リアル脱出ゲーム大阪心斎橋店 大阪府大阪市中央区西心斎橋2-11-30',
         showMap: true
       },
       { id: '20260822-afternoon', title: '昼食・大阪市内散策', start: '12:30', end: '18:00', location: '心斎橋・大阪市内', certainty: 'candidate', showMap: false },
-      { id: '20260822-dinner', title: 'ホテル周辺で夕食', start: '19:00', end: '20:30', location: '淀屋橋周辺', certainty: 'candidate', showMap: false }
+      { id: '20260822-dinner', title: 'ホテル周辺で夕食', start: '19:00', end: '20:30', location: '北浜周辺', certainty: 'candidate', showMap: false }
     ],
     undecided: ['脱出ゲーム後の昼食・午後の訪問先']
   },
   {
     date: '2026-08-23',
     dayNumber: 4,
-    summary: '淀屋橋からユニバーサルシティへ移動し、15時からUSJ',
+    summary: '北浜からユニバーサルシティへ移動し、15時からUSJ',
     area: '大阪・ユニバーサルシティ',
     accommodation: 'オリエンタルホテル ユニバーサル・シティ（1泊目／2泊）',
     events: [
-      { id: '20260823-checkout', title: '相鉄フレッサインをチェックアウト', start: '09:00', end: '10:00', location: '相鉄フレッサイン 淀屋橋', certainty: 'confirmed', mapsQuery: '相鉄フレッサイン 淀屋橋 大阪府大阪市中央区北浜3丁目2-23', showMap: true },
-      { id: '20260823-transfer', title: 'ユニバーサルシティへ移動', start: '10:00', end: '11:30', location: '淀屋橋 → ユニバーサルシティ', certainty: 'candidate', description: '当日の列車時刻は出発時に選ぶ。駅だけのGoogleマップリンクは表示しない。', showMap: false },
+      { id: '20260823-checkout', title: '相鉄フレッサイン北浜をチェックアウト', start: '09:00', end: '10:00', location: '相鉄フレッサイン 北浜', certainty: 'confirmed', details: [{ label: '住所', value: '〒541-0043 大阪府大阪市中央区高麗橋2丁目4-10' }], mapsQuery: '相鉄フレッサイン 北浜 大阪府大阪市中央区高麗橋2丁目4-10', showMap: true },
+      { id: '20260823-transfer', title: 'ユニバーサルシティへ移動', start: '10:00', end: '11:30', location: '北浜 → ユニバーサルシティ', certainty: 'candidate', description: '当日の列車時刻は出発時に選ぶ。駅だけのGoogleマップリンクは表示しない。', showMap: false },
       {
         id: '20260823-luggage',
         title: 'オリエンタルホテルへ荷物を預ける',
@@ -283,7 +289,10 @@ export const tripDays: TripDay[] = [
         end: '12:00',
         location: 'オリエンタルホテル ユニバーサル・シティ',
         certainty: 'confirmed',
-        description: '〒554-0024 大阪府大阪市此花区島屋6丁目2-78。8月23日から25日まで2泊。',
+        description: '8月23日から25日まで2泊。',
+        details: [
+          { label: '住所', value: '〒554-0024 大阪府大阪市此花区島屋6丁目2-78' }
+        ],
         mapsQuery: 'オリエンタルホテル ユニバーサル・シティ 大阪府大阪市此花区島屋6丁目2-78',
         showMap: true
       },
@@ -360,12 +369,12 @@ export const tripDays: TripDay[] = [
 export const tripStays = [
   {
     id: 'stay-yodoyabashi',
-    name: '相鉄フレッサイン 淀屋橋',
+    name: '相鉄フレッサイン 北浜',
     checkIn: '2026-08-20',
     checkOut: '2026-08-23',
     nights: 3,
-    address: '〒541-0041 大阪府大阪市中央区北浜3丁目2-23',
-    mapsQuery: '相鉄フレッサイン 淀屋橋 大阪府大阪市中央区北浜3丁目2-23'
+    address: '〒541-0043 大阪府大阪市中央区高麗橋2丁目4-10',
+    mapsQuery: '相鉄フレッサイン 北浜 大阪府大阪市中央区高麗橋2丁目4-10'
   },
   {
     id: 'stay-universal-city',

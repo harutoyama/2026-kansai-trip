@@ -25,6 +25,7 @@ function routeParts(location?: string) {
 export function EventCard({ event }: { event: TripEvent }) {
   const route = routeParts(event.location)
   const transport = event.transport
+  const details = event.details ?? []
   const maps = event.showMap !== false && event.mapsQuery
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapsQuery)}`
     : null
@@ -73,50 +74,65 @@ export function EventCard({ event }: { event: TripEvent }) {
 
       {event.description && <p className="cinema-event-description">{event.description}</p>}
 
-      {transport && (
+      {(transport || details.length > 0) && (
         <details className="cinema-event-details">
           <summary>
             <span>詳細</span>
             <ChevronDown size={16} strokeWidth={1.8} aria-hidden="true" />
           </summary>
           <div className="cinema-event-details-body">
-            <dl>
-              {transport.service && (
-                <div><dt>便・列車</dt><dd>{transport.service}{transport.serviceCode ? `（${transport.serviceCode}）` : ''}</dd></div>
-              )}
-              {transport.operator && <div><dt>運行</dt><dd>{transport.operator}</dd></div>}
-              {transport.line && <div><dt>系統・路線</dt><dd>{transport.line}</dd></div>}
-              {transport.equipment && <div><dt>車両・機材</dt><dd>{transport.equipment}</dd></div>}
-              {transport.departure.terminal && <div><dt>出発ターミナル</dt><dd>{transport.departure.terminal}</dd></div>}
-              {transport.arrival.terminal && <div><dt>到着ターミナル</dt><dd>{transport.arrival.terminal}</dd></div>}
-            </dl>
-
-            {transport.seats && transport.seats.length > 0 && (
-              <div className="cinema-seat-section">
-                <h4>座席</h4>
-                <ul>
-                  {transport.seats.map((seat, index) => (
-                    <li key={`${seat.passenger}-${seat.car ?? ''}-${seat.seat}-${index}`}>
-                      <span>{seat.passenger}</span>
-                      <strong>{seat.car ? `${seat.car} ` : ''}{seat.seat}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {details.length > 0 && (
+              <dl>
+                {details.map((detail, index) => (
+                  <div key={`${detail.label}-${index}`}>
+                    <dt>{detail.label}</dt>
+                    <dd>{detail.value}</dd>
+                  </div>
+                ))}
+              </dl>
             )}
 
-            {transport.stops && transport.stops.length > 0 && (
-              <div className="cinema-detail-note">
-                <h4>主な停車駅</h4>
-                <p>{transport.stops.join(' → ')}</p>
-              </div>
-            )}
+            {transport && (
+              <>
+                <dl>
+                  {transport.service && (
+                    <div><dt>便・列車</dt><dd>{transport.service}{transport.serviceCode ? `（${transport.serviceCode}）` : ''}</dd></div>
+                  )}
+                  {transport.operator && <div><dt>運行</dt><dd>{transport.operator}</dd></div>}
+                  {transport.line && <div><dt>系統・路線</dt><dd>{transport.line}</dd></div>}
+                  {transport.equipment && <div><dt>車両・機材</dt><dd>{transport.equipment}</dd></div>}
+                  {transport.departure.terminal && <div><dt>出発ターミナル</dt><dd>{transport.departure.terminal}</dd></div>}
+                  {transport.arrival.terminal && <div><dt>到着ターミナル</dt><dd>{transport.arrival.terminal}</dd></div>}
+                </dl>
 
-            {transport.notes && transport.notes.length > 0 && (
-              <div className="cinema-detail-note">
-                <h4>注意</h4>
-                <ul>{transport.notes.map((note) => <li key={note}>{note}</li>)}</ul>
-              </div>
+                {transport.seats && transport.seats.length > 0 && (
+                  <div className="cinema-seat-section">
+                    <h4>座席</h4>
+                    <ul>
+                      {transport.seats.map((seat, index) => (
+                        <li key={`${seat.passenger}-${seat.car ?? ''}-${seat.seat}-${index}`}>
+                          <span>{seat.passenger}</span>
+                          <strong>{seat.car ? `${seat.car} ` : ''}{seat.seat}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {transport.stops && transport.stops.length > 0 && (
+                  <div className="cinema-detail-note">
+                    <h4>主な停車駅</h4>
+                    <p>{transport.stops.join(' → ')}</p>
+                  </div>
+                )}
+
+                {transport.notes && transport.notes.length > 0 && (
+                  <div className="cinema-detail-note">
+                    <h4>注意</h4>
+                    <ul>{transport.notes.map((note) => <li key={note}>{note}</li>)}</ul>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </details>

@@ -1288,6 +1288,9 @@ select:focus-visible {
   gap: 7px;
   margin: 0;
 }
+.cinema-event-details dl + dl {
+  margin-top: 10px;
+}
 .cinema-event-details dl > div {
   display: grid;
   grid-template-columns: 84px 1fr;
@@ -1427,16 +1430,9 @@ select:focus-visible {
   height: 1px;
   background: #b8c2bd;
 }
-.cinema-stay-address {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  margin: 13px 0 0;
-  color: #68787a;
-  font-size: 10px;
-  line-height: 1.6;
+.cinema-stay-details {
+  margin-top: 13px;
 }
-.cinema-stay-address svg { flex: none; margin-top: 1px; }
 .cinema-stay-card > a {
   display: inline-flex;
   align-items: center;
@@ -2324,11 +2320,28 @@ select:focus-visible {
   border-radius: 50%;
   box-shadow: 0 0 0 26px rgba(255, 255, 255, 0.05);
 }
-.pretrip-highlight-card small {
+.pretrip-highlight-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pretrip-highlight-meta small {
   opacity: 0.72;
   font-size: 8px;
   font-weight: 900;
   letter-spacing: 0.13em;
+}
+.pretrip-highlight-meta span {
+  flex: none;
+  max-width: 58%;
+  opacity: 0.68;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: right;
 }
 .pretrip-highlight-card h3 {
   margin: 37px 0 8px;
@@ -2342,16 +2355,6 @@ select:focus-visible {
   opacity: 0.82;
   font-size: 10px;
   line-height: 1.65;
-}
-.pretrip-highlight-card > span {
-  position: absolute;
-  z-index: 1;
-  right: 18px;
-  bottom: 15px;
-  left: 18px;
-  opacity: 0.68;
-  font-size: 8px;
-  font-weight: 800;
 }
 .pretrip-update-list {
   overflow: hidden;

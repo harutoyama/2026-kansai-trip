@@ -57,9 +57,28 @@ describe('2026 Kansai trip canonical data', () => {
 
   it('stores hotel dates and addresses', () => {
     expect(tripStays).toEqual([
-      expect.objectContaining({ nights: 3, address: '〒541-0041 大阪府大阪市中央区北浜3丁目2-23' }),
+      expect.objectContaining({
+        name: '相鉄フレッサイン 北浜',
+        nights: 3,
+        address: '〒541-0043 大阪府大阪市中央区高麗橋2丁目4-10'
+      }),
       expect.objectContaining({ nights: 2, address: '〒554-0024 大阪府大阪市此花区島屋6丁目2-78' })
     ])
+  })
+
+  it('stores place addresses in expandable details instead of descriptions', () => {
+    expect(event('20260820-hotel-checkin').details).toEqual([
+      { label: '住所', value: '〒541-0043 大阪府大阪市中央区高麗橋2丁目4-10' }
+    ])
+    expect(event('20260822-conan-escape').details?.[0]?.label).toBe('住所')
+    expect(event('20260823-luggage').details?.[0]?.label).toBe('住所')
+
+    const placeEvents = [
+      event('20260820-hotel-checkin'),
+      event('20260822-conan-escape'),
+      event('20260823-luggage')
+    ]
+    expect(placeEvents.every((item) => !item.description?.includes('〒'))).toBe(true)
   })
 
   it('stores the fixed activities', () => {
