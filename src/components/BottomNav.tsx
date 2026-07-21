@@ -1,12 +1,11 @@
-import { CalendarDays, Compass, NotebookPen, Route, Sparkles } from 'lucide-react'
+import { CalendarDays, Compass, Route, Sparkles } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const items = [
   { to: '/', label: 'ホーム', Icon: Compass },
   { to: '/itinerary', label: '旅程', Icon: CalendarDays },
-  { to: '/planning', label: '作戦', Icon: Sparkles },
-  { to: '/transport', label: '交通', Icon: Route },
-  { to: '/notes', label: 'メモ', Icon: NotebookPen }
+  { to: '/planning', label: '計画', Icon: Sparkles },
+  { to: '/transport', label: '交通', Icon: Route }
 ] as const
 
 export function BottomNav() {

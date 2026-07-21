@@ -2,10 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   defaultSharedMemos,
   defaultSharedPages,
+  encodeNoteTitle,
+  encodePlanTitle,
+  memoToPlan,
+  memoToPlanningNote,
+  pageToPlan,
   type MemoCategory,
+  type NoteStatus,
+  type NoteType,
+  type PlanStatus,
+  type PlanningNote,
   type SharedMemo,
   type SharedPage,
-  type SharedPageSlug
+  type SharedPageSlug,
+  type SharedPlan
 } from '../data/sharedContent'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
@@ -13,6 +23,23 @@ interface MemoInput {
   category: MemoCategory
   title: string
   content: string
+  author: string
+}
+
+export interface PlanInput {
+  category: MemoCategory
+  title: string
+  content: string
+  status: PlanStatus
+  author: string
+}
+
+export interface PlanningNoteInput {
+  category: MemoCategory
+  title: string
+  content: string
+  type: NoteType
+  status: NoteStatus
   author: string
 }
 
@@ -178,22 +205,77 @@ export function useSharedContent() {
     }
   }
 
-  const sortedMemos = useMemo(
-    () => [...memos].sort((left, right) => right.created_at.localeCompare(left.created_at)),
+  const plans = useMemo(() => {
+    const pagePlans = Object.values(pages).map(pageToPlan)
+    const memoPlans = memos.flatMap((memo) => {
+      const plan = memoToPlan(memo)
+      return plan ? [plan] : []
+    })
+    return [...pagePlans, ...memoPlans].sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+  }, [memos, pages])
+
+  const planningNotes = useMemo(
+    () => memos.flatMap((memo) => {
+      const note = memoToPlanningNote(memo)
+      return note ? [note] : []
+    }).sort((left, right) => right.updated_at.localeCompare(left.updated_at)),
     [memos]
   )
 
+  const createPlan = async (input: PlanInput) => createMemo({
+    category: input.category,
+    title: encodePlanTitle(input.title, input.status),
+    content: input.content,
+    author: input.author
+  })
+
+  const updatePlan = async (plan: SharedPlan, input: PlanInput) => {
+    if (plan.source === 'page') {
+      if (!plan.pageSlug) throw new Error('基本作戦の識別情報がありません。')
+      return updatePage(plan.pageSlug, input.content, input.author)
+    }
+    return updateMemo(plan.id, {
+      category: input.category,
+      title: encodePlanTitle(input.title, input.status),
+      content: input.content,
+      author: input.author
+    })
+  }
+
+  const deletePlan = async (plan: SharedPlan) => {
+    if (plan.source === 'page') throw new Error('基本作戦は削除できません。本文を編集してください。')
+    return deleteMemo(plan.id)
+  }
+
+  const createPlanningNote = async (input: PlanningNoteInput) => createMemo({
+    category: input.category,
+    title: encodeNoteTitle(input.title, input.type, input.status),
+    content: input.content,
+    author: input.author
+  })
+
+  const updatePlanningNote = async (note: PlanningNote, input: PlanningNoteInput) => updateMemo(note.id, {
+    category: input.category,
+    title: encodeNoteTitle(input.title, input.type, input.status),
+    content: input.content,
+    author: input.author
+  })
+
+  const deletePlanningNote = async (note: PlanningNote) => deleteMemo(note.id)
+
   return {
-    pages,
-    memos: sortedMemos,
+    plans,
+    planningNotes,
     loading,
     saving,
     error,
     configured: isSupabaseConfigured,
     reload: load,
-    updatePage,
-    createMemo,
-    updateMemo,
-    deleteMemo
+    createPlan,
+    updatePlan,
+    deletePlan,
+    createPlanningNote,
+    updatePlanningNote,
+    deletePlanningNote
   }
 }

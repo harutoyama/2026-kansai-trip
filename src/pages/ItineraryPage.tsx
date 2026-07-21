@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { EventCard } from '../components/EventCard'
 import { tripDays } from '../data/trip'
+import { formatJapaneseWeekday } from '../utils/date'
 
 export function ItineraryPage() {
   const [selected, setSelected] = useState(0)
@@ -30,6 +31,7 @@ export function ItineraryPage() {
           >
             <span>DAY {item.dayNumber}</span>
             <strong>8/{Number(item.date.slice(-2))}</strong>
+            <small>{formatJapaneseWeekday(item.date)}</small>
           </button>
         ))}
       </div>

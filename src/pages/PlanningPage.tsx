@@ -1,32 +1,74 @@
 import {
-  ArrowRight,
-  MapPinned,
+  Lightbulb,
   Pencil,
+  Plus,
   Sparkles,
-  Utensils,
+  Trash2,
   Wifi,
   WifiOff,
   X
 } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react'
 import {
+  memoCategories,
   memoCategoryLabels,
-  sharedPageSlugs,
-  type SharedPageSlug
+  noteStatuses,
+  noteStatusLabels,
+  noteTypes,
+  noteTypeLabels,
+  planStatuses,
+  planStatusLabels,
+  type MemoCategory,
+  type NoteStatus,
+  type NoteType,
+  type PlanStatus,
+  type PlanningNote,
+  type SharedPlan
 } from '../data/sharedContent'
-import { useSharedContent } from '../hooks/useSharedContent'
+import {
+  useSharedContent,
+  type PlanningNoteInput,
+  type PlanInput
+} from '../hooks/useSharedContent'
 
-const boardIcons = {
-  usj: Sparkles,
-  dining: Utensils,
-  kyoto: MapPinned
-} as const
+type Filter = 'all' | MemoCategory
 
-const boardKickers: Record<SharedPageSlug, string> = {
-  usj: 'UNIVERSAL STUDIOS JAPAN',
-  dining: 'FAMILY DINING SHORTLIST',
-  kyoto: 'KYOTO DAY NOTES'
+type EditorState =
+  | { kind: 'plan'; mode: 'create'; plan: null }
+  | { kind: 'plan'; mode: 'edit'; plan: SharedPlan }
+  | { kind: 'note'; mode: 'create'; note: null }
+  | { kind: 'note'; mode: 'edit'; note: PlanningNote }
+  | null
+
+const emptyPlanForm: PlanInput = {
+  category: 'general',
+  title: '',
+  content: '',
+  status: 'draft',
+  author: '晴'
+}
+
+const emptyNoteForm: PlanningNoteInput = {
+  category: 'general',
+  title: '',
+  content: '',
+  type: 'candidate',
+  status: 'open',
+  author: '晴'
+}
+
+const familyMembers = ['晴', '父', '母', '弟'] as const
+
+function normalizeEditorName(name: string) {
+  return familyMembers.includes(name as (typeof familyMembers)[number]) ? name : '晴'
+}
+
+const planStatusOrder: Record<PlanStatus, number> = {
+  active: 0,
+  backup: 1,
+  draft: 2,
+  archived: 3
 }
 
 function formatUpdatedAt(value: string) {
@@ -41,52 +83,160 @@ function formatUpdatedAt(value: string) {
 
 export function PlanningPage() {
   const {
-    pages,
-    memos,
+    plans,
+    planningNotes,
     loading,
     saving,
     error,
     configured,
-    updatePage
+    createPlan,
+    updatePlan,
+    deletePlan,
+    createPlanningNote,
+    updatePlanningNote,
+    deletePlanningNote
   } = useSharedContent()
-  const [selected, setSelected] = useState<SharedPageSlug>('usj')
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState('')
-  const [editorName, setEditorName] = useState('晴')
+  const [filter, setFilter] = useState<Filter>('all')
+  const [editor, setEditor] = useState<EditorState>(null)
+  const [planForm, setPlanForm] = useState<PlanInput>(emptyPlanForm)
+  const [noteForm, setNoteForm] = useState<PlanningNoteInput>(emptyNoteForm)
   const [notice, setNotice] = useState<string | null>(null)
 
-  const page = pages[selected]
-  const Icon = boardIcons[selected]
-  const relatedMemos = memos.filter((memo) => memo.category === selected).slice(0, 3)
+  const visiblePlans = useMemo(
+    () => plans
+      .filter((plan) => filter === 'all' || plan.category === filter)
+      .sort((left, right) => {
+        const statusDifference = planStatusOrder[left.status] - planStatusOrder[right.status]
+        return statusDifference || right.updated_at.localeCompare(left.updated_at)
+      }),
+    [filter, plans]
+  )
 
-  const openEditor = () => {
+  const visibleNotes = useMemo(
+    () => planningNotes.filter((note) => filter === 'all' || note.category === filter),
+    [filter, planningNotes]
+  )
+
+  const selectedCategory = filter === 'all' ? 'general' : filter
+
+  const openCreatePlan = () => {
     if (!configured) return
-    setDraft(page.content)
+    setPlanForm({ ...emptyPlanForm, category: selectedCategory })
+    setEditor({ kind: 'plan', mode: 'create', plan: null })
     setNotice(null)
-    setEditing(true)
   }
 
-  const save = async () => {
-    if (!draft.trim()) {
-      setNotice('本文を入力してください。')
+  const openEditPlan = (plan: SharedPlan) => {
+    if (!configured) return
+    setPlanForm({
+      category: plan.category,
+      title: plan.title,
+      content: plan.content,
+      status: plan.status,
+      author: normalizeEditorName(plan.author)
+    })
+    setEditor({ kind: 'plan', mode: 'edit', plan })
+    setNotice(null)
+  }
+
+  const openCreateNote = () => {
+    if (!configured) return
+    setNoteForm({ ...emptyNoteForm, category: selectedCategory })
+    setEditor({ kind: 'note', mode: 'create', note: null })
+    setNotice(null)
+  }
+
+  const openEditNote = (note: PlanningNote) => {
+    if (!configured) return
+    setNoteForm({
+      category: note.category,
+      title: note.title,
+      content: note.content,
+      type: note.type,
+      status: note.status,
+      author: normalizeEditorName(note.author)
+    })
+    setEditor({ kind: 'note', mode: 'edit', note })
+    setNotice(null)
+  }
+
+  const savePlan = async () => {
+    if (!editor || editor.kind !== 'plan') return
+    if (!planForm.title.trim() || !planForm.content.trim() || !planForm.author.trim()) {
+      setNotice('タイトル、本文、編集者を入力してください。')
       return
     }
+
+    const input = {
+      ...planForm,
+      title: planForm.title.trim(),
+      content: planForm.content.trim(),
+      author: planForm.author.trim()
+    }
+
     try {
-      await updatePage(selected, draft.trim(), editorName)
-      setEditing(false)
-      setNotice('作戦ページを保存しました。別端末にも同期されます。')
+      if (editor.mode === 'create') await createPlan(input)
+      else await updatePlan(editor.plan, input)
+      setEditor(null)
+      setNotice(editor.mode === 'create' ? '作戦を追加しました。' : '作戦を更新しました。')
     } catch (saveError) {
       setNotice(saveError instanceof Error ? saveError.message : '保存に失敗しました。')
     }
   }
 
+  const saveNote = async () => {
+    if (!editor || editor.kind !== 'note') return
+    if (!noteForm.title.trim() || !noteForm.content.trim() || !noteForm.author.trim()) {
+      setNotice('タイトル、本文、編集者を入力してください。')
+      return
+    }
+
+    const input = {
+      ...noteForm,
+      title: noteForm.title.trim(),
+      content: noteForm.content.trim(),
+      author: noteForm.author.trim()
+    }
+
+    try {
+      if (editor.mode === 'create') await createPlanningNote(input)
+      else await updatePlanningNote(editor.note, input)
+      setEditor(null)
+      setNotice(editor.mode === 'create' ? '検討メモを追加しました。' : '検討メモを更新しました。')
+    } catch (saveError) {
+      setNotice(saveError instanceof Error ? saveError.message : '保存に失敗しました。')
+    }
+  }
+
+  const removePlan = async (plan: SharedPlan) => {
+    if (!window.confirm(`「${plan.title}」を削除しますか。`)) return
+    try {
+      await deletePlan(plan)
+      setNotice('作戦を削除しました。')
+    } catch (deleteError) {
+      setNotice(deleteError instanceof Error ? deleteError.message : '削除に失敗しました。')
+    }
+  }
+
+  const removeNote = async (note: PlanningNote) => {
+    if (!window.confirm(`「${note.title}」を削除しますか。`)) return
+    try {
+      await deletePlanningNote(note)
+      setNotice('検討メモを削除しました。')
+    } catch (deleteError) {
+      setNotice(deleteError instanceof Error ? deleteError.message : '削除に失敗しました。')
+    }
+  }
+
+  const editingBasePlan = editor?.kind === 'plan' && editor.mode === 'edit' && editor.plan.source === 'page'
+
   return (
-    <div className="shared-page">
+    <div className="shared-page planning-hub">
       <header className="shared-hero shared-hero-planning">
         <div>
-          <p>SHARED PLAYBOOK</p>
-          <h1>作戦</h1>
-          <span>USJ、食事、京都の計画を家族全員で更新します。</span>
+          <p>FAMILY PLANNING HUB</p>
+          <h1>計画</h1>
+          <span>採用する作戦と、その判断材料になる候補・調査結果・確認事項を分けて管理します。</span>
         </div>
         <div className={`shared-sync-state ${configured ? 'is-online' : 'is-offline'}`}>
           {configured ? <Wifi size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
@@ -99,7 +249,7 @@ export function PlanningPage() {
           <WifiOff size={20} aria-hidden="true" />
           <div>
             <strong>現在は閲覧モードです</strong>
-            <p>SupabaseのSQL適用とGitHub Actionsの環境変数設定後に、家族間の編集と同期が有効になります。</p>
+            <p>Supabase設定後は、作戦と検討メモを家族全員で追加・編集できます。</p>
           </div>
         </section>
       )}
@@ -107,123 +257,257 @@ export function PlanningPage() {
       {error && <p className="shared-error" role="alert">{error}</p>}
       {notice && <p className="shared-notice" role="status">{notice}</p>}
 
-      <div className="shared-board-tabs" role="tablist" aria-label="作戦カテゴリー">
-        {sharedPageSlugs.map((slug) => {
-          const TabIcon = boardIcons[slug]
-          return (
-            <button
-              key={slug}
-              type="button"
-              role="tab"
-              aria-selected={selected === slug}
-              className={selected === slug ? 'is-active' : ''}
-              onClick={() => {
-                setSelected(slug)
-                setNotice(null)
-              }}
-            >
-              <TabIcon size={17} aria-hidden="true" />
-              <span>{pages[slug].title}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      <section className="shared-board-card" aria-busy={loading}>
-        <div className="shared-board-orbit" aria-hidden="true" />
-        <div className="shared-board-heading">
-          <div>
-            <p>{boardKickers[selected]}</p>
-            <h2><Icon size={24} aria-hidden="true" /> {page.title}</h2>
-          </div>
+      <div className="planning-filter-strip" role="tablist" aria-label="計画カテゴリー">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={filter === 'all'}
+          className={filter === 'all' ? 'is-active' : ''}
+          onClick={() => setFilter('all')}
+        >
+          すべて
+        </button>
+        {memoCategories.map((category) => (
           <button
             type="button"
-            className="shared-icon-button"
-            onClick={openEditor}
-            disabled={!configured || loading}
-            aria-label={`${page.title}を編集`}
+            role="tab"
+            aria-selected={filter === category}
+            className={filter === category ? 'is-active' : ''}
+            key={category}
+            onClick={() => setFilter(category)}
           >
-            <Pencil size={18} aria-hidden="true" />
+            {memoCategoryLabels[category]}
+          </button>
+        ))}
+      </div>
+
+      <section className="planning-section" aria-busy={loading}>
+        <div className="planning-section-heading">
+          <div>
+            <p>PLAYBOOKS</p>
+            <h2><Sparkles size={20} aria-hidden="true" /> 作戦</h2>
+            <span>現在どう動くかをまとめた実行方針です。</span>
+          </div>
+          <button type="button" onClick={openCreatePlan} disabled={!configured}>
+            <Plus size={17} aria-hidden="true" /> 作戦を追加
           </button>
         </div>
-        <p className="shared-board-description">{page.description}</p>
-        <div className="shared-board-content">{page.content}</div>
-        <p className="shared-board-updated">
-          {page.updated_by}さんが {formatUpdatedAt(page.updated_at)} に更新
-        </p>
+
+        <div className="planning-card-list">
+          {visiblePlans.length > 0 ? visiblePlans.map((plan) => (
+            <article className={`planning-plan-card status-${plan.status}`} key={plan.id}>
+              <div className="planning-card-top">
+                <div className="planning-card-labels">
+                  <span>{memoCategoryLabels[plan.category]}</span>
+                  <b>{planStatusLabels[plan.status]}</b>
+                  {plan.source === 'page' && <em>基本作戦</em>}
+                </div>
+                <div className="planning-card-actions">
+                  <button type="button" onClick={() => openEditPlan(plan)} disabled={!configured} aria-label={`${plan.title}を編集`}>
+                    <Pencil size={16} aria-hidden="true" />
+                  </button>
+                  {plan.source === 'memo' && (
+                    <button type="button" onClick={() => void removePlan(plan)} disabled={!configured || saving} aria-label={`${plan.title}を削除`}>
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <h3>{plan.title}</h3>
+              {plan.description && <p className="planning-card-description">{plan.description}</p>}
+              <div className="planning-card-content">{plan.content}</div>
+              <small>{plan.author}さんが {formatUpdatedAt(plan.updated_at)} に更新</small>
+            </article>
+          )) : (
+            <div className="shared-empty-card">
+              <p>このカテゴリーの作戦はありません。</p>
+              <button type="button" onClick={openCreatePlan} disabled={!configured}>作戦を追加</button>
+            </div>
+          )}
+        </div>
       </section>
 
-      <section className="shared-related-section">
-        <div className="shared-section-heading">
+      <section className="planning-section planning-notes-section" aria-busy={loading}>
+        <div className="planning-section-heading">
           <div>
-            <p>RELATED NOTES</p>
-            <h2>{memoCategoryLabels[selected]}の共有メモ</h2>
+            <p>DECISION MATERIALS</p>
+            <h2><Lightbulb size={20} aria-hidden="true" /> 検討メモ</h2>
+            <span>候補、調査結果、確認事項、ToDoを作戦と分けて残します。</span>
           </div>
-          <Link to={`/notes?category=${selected}`}>
-            すべて見る <ArrowRight size={14} aria-hidden="true" />
-          </Link>
+          <button type="button" onClick={openCreateNote} disabled={!configured}>
+            <Plus size={17} aria-hidden="true" /> メモを追加
+          </button>
         </div>
 
-        {relatedMemos.length > 0 ? (
-          <div className="shared-mini-feed">
-            {relatedMemos.map((memo) => (
-              <article key={memo.id}>
-                <div className="shared-avatar" aria-hidden="true">{memo.author.slice(0, 1)}</div>
-                <div>
-                  <p><strong>{memo.author}</strong><span>{formatUpdatedAt(memo.updated_at)}</span></p>
-                  <h3>{memo.title}</h3>
-                  <div>{memo.content}</div>
+        <div className="planning-card-list">
+          {visibleNotes.length > 0 ? visibleNotes.map((note) => (
+            <article className={`planning-note-card note-status-${note.status}`} key={note.id}>
+              <div className="planning-card-top">
+                <div className="planning-card-labels">
+                  <span>{memoCategoryLabels[note.category]}</span>
+                  <b>{noteTypeLabels[note.type]}</b>
+                  <em>{noteStatusLabels[note.status]}</em>
                 </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="shared-empty-card">
-            <p>このカテゴリーのメモはまだありません。</p>
-            <Link to={`/notes?category=${selected}`}>共有メモを追加する</Link>
-          </div>
-        )}
+                <div className="planning-card-actions">
+                  <button type="button" onClick={() => openEditNote(note)} disabled={!configured} aria-label={`${note.title}を編集`}>
+                    <Pencil size={16} aria-hidden="true" />
+                  </button>
+                  <button type="button" onClick={() => void removeNote(note)} disabled={!configured || saving} aria-label={`${note.title}を削除`}>
+                    <Trash2 size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              <h3>{note.title}</h3>
+              <div className="planning-card-content">{note.content}</div>
+              <small>{note.author}さんが {formatUpdatedAt(note.updated_at)} に更新</small>
+            </article>
+          )) : (
+            <div className="shared-empty-card">
+              <p>このカテゴリーの検討メモはありません。</p>
+              <button type="button" onClick={openCreateNote} disabled={!configured}>メモを追加</button>
+            </div>
+          )}
+        </div>
       </section>
 
-      {editing && (
-        <div className="shared-modal-backdrop" role="presentation" onMouseDown={(event) => {
-          if (event.currentTarget === event.target) setEditing(false)
+      {editor && (
+        <div className="shared-modal-backdrop" role="presentation" onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+          if (event.currentTarget === event.target) setEditor(null)
         }}>
           <section className="shared-modal" role="dialog" aria-modal="true" aria-labelledby="planning-editor-title">
             <div className="shared-modal-handle" />
             <div className="shared-modal-heading">
               <div>
-                <p>SHARED EDITOR</p>
-                <h2 id="planning-editor-title">{page.title}を編集</h2>
+                <p>FAMILY PLANNING EDITOR</p>
+                <h2 id="planning-editor-title">
+                  {editor.kind === 'plan'
+                    ? editor.mode === 'create' ? '作戦を追加' : '作戦を編集'
+                    : editor.mode === 'create' ? '検討メモを追加' : '検討メモを編集'}
+                </h2>
               </div>
-              <button type="button" onClick={() => setEditing(false)} aria-label="閉じる">
+              <button type="button" onClick={() => setEditor(null)} aria-label="閉じる">
                 <X size={20} aria-hidden="true" />
               </button>
             </div>
 
-            <label className="shared-field">
-              <span>本文</span>
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                maxLength={10000}
-                rows={12}
-              />
-            </label>
-
-            <label className="shared-field">
-              <span>編集者</span>
-              <select value={editorName} onChange={(event) => setEditorName(event.target.value)}>
-                <option value="晴">晴</option>
-                <option value="父">父</option>
-                <option value="母">母</option>
-                <option value="弟">弟</option>
-              </select>
-            </label>
-
-            <button type="button" className="shared-primary-button" onClick={() => void save()} disabled={saving}>
-              {saving ? '保存中' : '保存して家族に同期'}
-            </button>
+            {editor.kind === 'plan' ? (
+              <>
+                {editingBasePlan && <p className="planning-editor-hint">基本作戦は本文と編集者を更新できます。別案は「作戦を追加」で作成してください。</p>}
+                <label className="shared-field">
+                  <span>カテゴリー</span>
+                  <select
+                    value={planForm.category}
+                    disabled={editingBasePlan}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => setPlanForm((current) => ({ ...current, category: event.target.value as MemoCategory }))}
+                  >
+                    {memoCategories.map((category) => <option value={category} key={category}>{memoCategoryLabels[category]}</option>)}
+                  </select>
+                </label>
+                <label className="shared-field">
+                  <span>タイトル</span>
+                  <input
+                    value={planForm.title}
+                    disabled={editingBasePlan}
+                    maxLength={80}
+                    placeholder="例: USJ混雑時の代替作戦"
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setPlanForm((current) => ({ ...current, title: event.target.value }))}
+                  />
+                </label>
+                <label className="shared-field">
+                  <span>状態</span>
+                  <select
+                    value={planForm.status}
+                    disabled={editingBasePlan}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => setPlanForm((current) => ({ ...current, status: event.target.value as PlanStatus }))}
+                  >
+                    {planStatuses.map((status) => <option value={status} key={status}>{planStatusLabels[status]}</option>)}
+                  </select>
+                </label>
+                <label className="shared-field">
+                  <span>本文</span>
+                  <textarea
+                    value={planForm.content}
+                    maxLength={5000}
+                    rows={10}
+                    placeholder="目的、優先順位、実行手順、代替案を書きます。"
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setPlanForm((current) => ({ ...current, content: event.target.value }))}
+                  />
+                </label>
+                <label className="shared-field">
+                  <span>編集者</span>
+                  <select value={planForm.author} onChange={(event: ChangeEvent<HTMLSelectElement>) => setPlanForm((current) => ({ ...current, author: event.target.value }))}>
+                    <option value="晴">晴</option>
+                    <option value="父">父</option>
+                    <option value="母">母</option>
+                    <option value="弟">弟</option>
+                  </select>
+                </label>
+                <button type="button" className="shared-primary-button" onClick={() => void savePlan()} disabled={saving}>
+                  {saving ? '保存中' : '保存して家族に同期'}
+                </button>
+              </>
+            ) : (
+              <>
+                <label className="shared-field">
+                  <span>カテゴリー</span>
+                  <select
+                    value={noteForm.category}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => setNoteForm((current) => ({ ...current, category: event.target.value as MemoCategory }))}
+                  >
+                    {memoCategories.map((category) => <option value={category} key={category}>{memoCategoryLabels[category]}</option>)}
+                  </select>
+                </label>
+                <label className="shared-field">
+                  <span>種類</span>
+                  <select
+                    value={noteForm.type}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => setNoteForm((current) => ({ ...current, type: event.target.value as NoteType }))}
+                  >
+                    {noteTypes.map((type) => <option value={type} key={type}>{noteTypeLabels[type]}</option>)}
+                  </select>
+                </label>
+                <label className="shared-field">
+                  <span>状態</span>
+                  <select
+                    value={noteForm.status}
+                    onChange={(event: ChangeEvent<HTMLSelectElement>) => setNoteForm((current) => ({ ...current, status: event.target.value as NoteStatus }))}
+                  >
+                    {noteStatuses.map((status) => <option value={status} key={status}>{noteStatusLabels[status]}</option>)}
+                  </select>
+                </label>
+                <label className="shared-field">
+                  <span>タイトル</span>
+                  <input
+                    value={noteForm.title}
+                    maxLength={80}
+                    placeholder="例: 母に夕食予算を確認"
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => setNoteForm((current) => ({ ...current, title: event.target.value }))}
+                  />
+                </label>
+                <label className="shared-field">
+                  <span>本文</span>
+                  <textarea
+                    value={noteForm.content}
+                    maxLength={5000}
+                    rows={8}
+                    placeholder="候補、根拠、確認したいこと、次の行動を書きます。"
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setNoteForm((current) => ({ ...current, content: event.target.value }))}
+                  />
+                </label>
+                <label className="shared-field">
+                  <span>編集者</span>
+                  <select value={noteForm.author} onChange={(event: ChangeEvent<HTMLSelectElement>) => setNoteForm((current) => ({ ...current, author: event.target.value }))}>
+                    <option value="晴">晴</option>
+                    <option value="父">父</option>
+                    <option value="母">母</option>
+                    <option value="弟">弟</option>
+                  </select>
+                </label>
+                <button type="button" className="shared-primary-button" onClick={() => void saveNote()} disabled={saving}>
+                  {saving ? '保存中' : '保存して家族に同期'}
+                </button>
+              </>
+            )}
           </section>
         </div>
       )}

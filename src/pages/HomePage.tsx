@@ -119,7 +119,7 @@ function formatSharedUpdate(value: string) {
 }
 
 function PreTripHome({ now }: { now: Date }) {
-  const { pages, memos, configured, loading } = useSharedContent();
+  const { plans, planningNotes, configured, loading } = useSharedContent();
   const daysLeft = Math.max(
     0,
     Math.ceil((tripStartsAt.getTime() - now.getTime()) / 86400000),
@@ -129,12 +129,21 @@ function PreTripHome({ now }: { now: Date }) {
     : configured
       ? "家族間同期中"
       : "共有設定待ち";
+  const usjPlan =
+    plans.find((plan) => plan.category === "usj" && plan.source === "page") ??
+    plans.find((plan) => plan.category === "usj");
+  const diningPlan =
+    plans.find((plan) => plan.category === "dining" && plan.source === "page") ??
+    plans.find((plan) => plan.category === "dining");
+  const kyotoPlan =
+    plans.find((plan) => plan.category === "kyoto" && plan.source === "page") ??
+    plans.find((plan) => plan.category === "kyoto");
   const decisions = [
     {
       key: "usj",
       kicker: "USJ · 8月24日",
       title: "朝一番の攻略方針を決める",
-      description: compactSharedText(pages.usj.content),
+      description: compactSharedText(usjPlan?.content ?? "USJ作戦を追加します。"),
       icon: "★",
       to: "/planning",
     },
@@ -142,7 +151,7 @@ function PreTripHome({ now }: { now: Date }) {
       key: "dining",
       kicker: "京都・大阪 · 食事",
       title: "家族4人で行く店を比較する",
-      description: compactSharedText(pages.dining.content),
+      description: compactSharedText(diningPlan?.content ?? "食事作戦を追加します。"),
       icon: "食",
       to: "/planning",
     },
@@ -150,13 +159,15 @@ function PreTripHome({ now }: { now: Date }) {
       key: "kyoto",
       kicker: "京都 · 観光",
       title: "暑さを考慮した一日を組む",
-      description: compactSharedText(pages.kyoto.content),
+      description: compactSharedText(kyotoPlan?.content ?? "京都作戦を追加します。"),
       icon: "京",
       to: "/planning",
     },
   ];
-  const highlights = [pages.usj, pages.dining, pages.kyoto];
-  const recentMemos = memos.slice(0, 3);
+  const highlights = plans
+    .filter((plan) => plan.status === "active")
+    .slice(0, 3);
+  const recentNotes = planningNotes.slice(0, 3);
 
   return (
     <div className="pretrip-home">
@@ -197,7 +208,7 @@ function PreTripHome({ now }: { now: Date }) {
           <section className="pretrip-setup-alert" role="status">
             <strong>共同編集の初期設定が未完了です</strong>
             <p>
-              SupabaseのSQL適用とGitHub ActionsのRepository secrets登録後に、作戦とメモを家族で編集できます。
+              SupabaseのSQL適用とGitHub ActionsのRepository secrets登録後に、作戦と検討メモを家族で編集できます。
             </p>
           </section>
         )}
@@ -236,14 +247,14 @@ function PreTripHome({ now }: { now: Date }) {
             <Link to="/planning">編集する</Link>
           </div>
           <div className="pretrip-highlight-scroll">
-            {highlights.map((page, index) => (
-              <Link className={`pretrip-highlight-card is-${index + 1}`} key={page.slug} to="/planning">
+            {highlights.map((plan, index) => (
+              <Link className={`pretrip-highlight-card is-${index + 1}`} key={plan.id} to="/planning">
                 <div className="pretrip-highlight-meta">
-                  <small>{page.slug.toUpperCase()}</small>
-                  <span>{page.updated_by}さんが更新</span>
+                  <small>{plan.category.toUpperCase()}</small>
+                  <span>{plan.author}さんが更新</span>
                 </div>
-                <h3>{page.title}</h3>
-                <p>{compactSharedText(page.content, 126)}</p>
+                <h3>{plan.title}</h3>
+                <p>{compactSharedText(plan.content, 126)}</p>
               </Link>
             ))}
           </div>
@@ -255,25 +266,25 @@ function PreTripHome({ now }: { now: Date }) {
               <p>FAMILY UPDATES</p>
               <h2 id="pretrip-updates-title">家族の最近の更新</h2>
             </div>
-            <Link to="/notes">メモを開く</Link>
+            <Link to="/planning">計画を開く</Link>
           </div>
           <div className="pretrip-update-list" aria-busy={loading}>
-            {recentMemos.length > 0 ? (
-              recentMemos.map((memo) => (
-                <Link key={memo.id} to={`/notes?category=${memo.category}`}>
-                  <span aria-hidden="true">{memo.author.slice(0, 1)}</span>
+            {recentNotes.length > 0 ? (
+              recentNotes.map((note) => (
+                <Link key={note.id} to="/planning">
+                  <span aria-hidden="true">{note.author.slice(0, 1)}</span>
                   <div>
                     <p>
-                      <strong>{memo.author}</strong>
-                      <small>{formatSharedUpdate(memo.updated_at)}</small>
+                      <strong>{note.author}</strong>
+                      <small>{formatSharedUpdate(note.updated_at)}</small>
                     </p>
-                    <h3>{memo.title}</h3>
-                    <div>{compactSharedText(memo.content, 108)}</div>
+                    <h3>{note.title}</h3>
+                    <div>{compactSharedText(note.content, 108)}</div>
                   </div>
                 </Link>
               ))
             ) : (
-              <p className="pretrip-empty">共有メモはまだありません。</p>
+              <p className="pretrip-empty">検討メモはまだありません。</p>
             )}
           </div>
         </section>
