@@ -1,0 +1,147 @@
+.access-gate {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px 16px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 239, 202, 0.88), transparent 35%),
+    linear-gradient(160deg, #edf0e8 0%, #d7dfd8 55%, #c9d6d0 100%);
+}
+
+.access-gate-card {
+  width: min(100%, 390px);
+  padding: 34px 24px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 30px;
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 28px 80px rgba(25, 61, 55, 0.18);
+  text-align: center;
+  backdrop-filter: blur(18px);
+}
+
+.access-gate-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  place-items: center;
+  border-radius: 19px;
+  background: #173f3b;
+  box-shadow: 0 13px 28px rgba(23, 63, 59, 0.24);
+  color: #fff8e9;
+}
+
+.access-gate-eyebrow {
+  margin: 0;
+  color: #6d7f7a;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.access-gate h1 {
+  margin: 9px 0 0;
+  color: #17312f;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.045em;
+}
+
+.access-gate-description {
+  margin: 16px auto 0;
+  color: #60706d;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.access-gate-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  text-align: left;
+}
+
+.access-gate-form label {
+  color: #334b47;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.access-gate-form input {
+  width: 100%;
+  min-height: 60px;
+  border: 1px solid #cad4d0;
+  border-radius: 17px;
+  background: #ffffff;
+  color: #17312f;
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: 0.42em;
+  text-align: center;
+}
+
+.access-gate-form input:focus {
+  border-color: #2b7167;
+  outline: 3px solid rgba(43, 113, 103, 0.16);
+}
+
+.access-gate-form button {
+  min-height: 54px;
+  border: 0;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #173f3b, #22665d);
+  box-shadow: 0 13px 26px rgba(23, 63, 59, 0.2);
+  color: white;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.access-gate-form button:disabled {
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.access-gate-error {
+  margin: 4px 0 0;
+  color: #a33f35;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.access-gate-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 84px;
+  margin-top: 20px;
+  color: #526663;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.access-gate-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1dbd7;
+  border-top-color: #22665d;
+  border-radius: 50%;
+  animation: access-gate-spin 0.8s linear infinite;
+}
+
+.access-gate-note {
+  margin: 22px 0 0;
+  color: #82908d;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+@keyframes access-gate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
