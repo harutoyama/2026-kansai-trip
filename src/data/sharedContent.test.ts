@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   encodeNoteTitle,
+  encodePageDescription,
   encodePlanTitle,
   memoToPlan,
   memoToPlanningNote,
@@ -16,6 +17,15 @@ const baseMemo: SharedMemo = {
   content: '本文',
   author: '晴',
   created_at: '2026-07-21T10:00:00+09:00',
+  updated_at: '2026-07-21T10:00:00+09:00'
+}
+
+const basePage: SharedPage = {
+  slug: 'kyoto',
+  title: '京都メモ',
+  description: '説明',
+  content: '本文',
+  updated_by: '母',
   updated_at: '2026-07-21T10:00:00+09:00'
 }
 
@@ -38,19 +48,29 @@ describe('planning content adapters', () => {
     expect(note).toMatchObject({ title: '候補', type: 'candidate', status: 'open' })
   })
 
-  it('converts fixed shared pages into active base plans', () => {
-    const page: SharedPage = {
-      slug: 'kyoto',
+  it('keeps legacy shared pages compatible with their slug and active status', () => {
+    expect(pageToPlan(basePage)).toMatchObject({
+      id: 'page:kyoto',
+      category: 'kyoto',
       title: '京都メモ',
       description: '説明',
-      content: '本文',
-      updated_by: '母',
-      updated_at: '2026-07-21T10:00:00+09:00'
-    }
-    expect(pageToPlan(page)).toMatchObject({
-      id: 'page:kyoto',
-      title: '京都基本作戦',
       status: 'active',
+      source: 'page'
+    })
+  })
+
+  it('stores and restores editable base-plan category and status in the page description', () => {
+    const page = {
+      ...basePage,
+      title: '雨天時の食事作戦',
+      description: encodePageDescription('屋内候補を優先します。', 'dining', 'backup')
+    }
+
+    expect(pageToPlan(page)).toMatchObject({
+      category: 'dining',
+      title: '雨天時の食事作戦',
+      description: '屋内候補を優先します。',
+      status: 'backup',
       source: 'page'
     })
   })
