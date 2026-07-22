@@ -3,6 +3,7 @@ import {
   defaultSharedMemos,
   defaultSharedPages,
   encodeNoteTitle,
+  encodePageDescription,
   encodePlanTitle,
   memoToPlan,
   memoToPlanningNote,
@@ -109,16 +110,23 @@ export function useSharedContent() {
     }
   }, [load])
 
-  const updatePage = async (slug: SharedPageSlug, content: string, updatedBy: string) => {
+  const updatePage = async (plan: SharedPlan, input: PlanInput) => {
     const client = supabase
     if (!client) throw new Error('Supabase同期が未設定のため、保存できません。')
+    if (!plan.pageSlug) throw new Error('基本作戦の識別情報がありません。')
 
+    const slug = plan.pageSlug
     setSaving(true)
     setError(null)
     try {
       const { data, error: updateError } = await client
         .from('shared_pages')
-        .update({ content, updated_by: updatedBy })
+        .update({
+          title: input.title,
+          description: encodePageDescription(plan.description, input.category, input.status),
+          content: input.content,
+          updated_by: input.author
+        })
         .eq('slug', slug)
         .select('*')
         .single()
@@ -230,10 +238,7 @@ export function useSharedContent() {
   })
 
   const updatePlan = async (plan: SharedPlan, input: PlanInput) => {
-    if (plan.source === 'page') {
-      if (!plan.pageSlug) throw new Error('基本作戦の識別情報がありません。')
-      return updatePage(plan.pageSlug, input.content, input.author)
-    }
+    if (plan.source === 'page') return updatePage(plan, input)
     return updateMemo(plan.id, {
       category: input.category,
       title: encodePlanTitle(input.title, input.status),
