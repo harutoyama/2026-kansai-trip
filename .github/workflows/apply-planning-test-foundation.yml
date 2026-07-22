@@ -32,6 +32,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -- .github/workflows/ci.yml
           git add -A
           git commit -m "feat: enable editable plans and browser regressions"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
