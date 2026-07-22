@@ -52,7 +52,7 @@ Supabase未設定でも、既存旅程、交通、宿泊、天気、地図、共
 
 リポジトリの **Settings → Pages → Build and deployment → Source** を `GitHub Actions` に設定してください。以降は`main`更新時に自動デプロイされます。
 
-公開URL: `https://harutoyama.github.io/2026-kansai-trip/`
+公開URL: [https://harutoyama.github.io/2026-kansai-trip/](https://harutoyama.github.io/2026-kansai-trip/)
 
 ## セキュリティ
 
