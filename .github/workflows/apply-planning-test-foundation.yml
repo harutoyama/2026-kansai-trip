@@ -1,0 +1,38 @@
+name: Apply planning test foundation
+
+on:
+  push:
+    branches:
+      - chatgpt/planning-edit-and-test-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/planning-edit-and-test-foundation
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply source changes
+        run: node scripts/apply-planning-test-foundation.mjs
+
+      - name: Refresh package lock
+        run: npm install --package-lock-only
+
+      - name: Commit generated changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: enable editable plans and browser regressions"
+          git push origin HEAD:chatgpt/planning-edit-and-test-foundation
