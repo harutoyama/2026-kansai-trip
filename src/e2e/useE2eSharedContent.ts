@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { SharedPlan } from '../data/sharedContent'
 import type { useSharedContent } from '../hooks/useSharedContent'
-import type { PlanInput, PlanningNoteInput } from '../hooks/useSharedContent'
+import type { PlanInput } from '../hooks/useSharedContent'
 
 const seedPlan: SharedPlan = {
   id: 'page:usj',
@@ -38,10 +38,10 @@ export function useE2eSharedContent() {
     error: null,
     configured: true,
     reload: async () => undefined,
-    createPlan: async (_input: PlanInput) => undefined as never,
+    createPlan: async () => undefined as never,
     updatePlan,
-    deletePlan: async (_plan: SharedPlan) => undefined,
-    createPlanningNote: async (_input: PlanningNoteInput) => undefined as never,
+    deletePlan: async () => undefined,
+    createPlanningNote: async () => undefined as never,
     updatePlanningNote: async () => undefined as never,
     deletePlanningNote: async () => undefined
   } as ReturnType<typeof useSharedContent>
