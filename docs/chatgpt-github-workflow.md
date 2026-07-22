@@ -77,6 +77,7 @@ npm ci
 npm test
 npm run lint
 npm run build
+npm run test:e2e
 ```
 
 - Node.jsのバージョンはPagesデプロイと合わせる。
@@ -96,7 +97,7 @@ npm run build
 - TypeScript型と実行時データ構造が一致している。
 - Supabaseスキーマ、RLS、Realtime、クライアント実装が整合している。
 - Secrets、service role key、予約番号、連絡先等が含まれていない。
-- `test`、`lint`、`build`が成功している。
+- `test`、`lint`、`build`、`test:e2e`が成功している。
 - 自動検証できない事項が明示されている。
 
 ## 8. マージ方針

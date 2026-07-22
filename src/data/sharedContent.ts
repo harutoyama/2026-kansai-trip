@@ -89,12 +89,7 @@ export const noteStatusLabels: Record<NoteStatus, string> = {
 
 const planTitlePattern = /^__plan__:(draft|active|backup|archived):(.*)$/s
 const noteTitlePattern = /^__note__:(candidate|fact|question|todo):(open|resolved|reflected|dismissed):(.*)$/s
-
-const basePlanTitles: Record<SharedPageSlug, string> = {
-  usj: 'USJ基本作戦',
-  dining: '食事基本作戦',
-  kyoto: '京都基本作戦'
-}
+const pageDescriptionPattern = /^__planmeta__:(general|usj|dining|kyoto|transport):(draft|active|backup|archived)\n([\s\S]*)$/
 
 export function encodePlanTitle(title: string, status: PlanStatus) {
   return `__plan__:${status}:${title}`
@@ -104,14 +99,43 @@ export function encodeNoteTitle(title: string, type: NoteType, status: NoteStatu
   return `__note__:${type}:${status}:${title}`
 }
 
-export function pageToPlan(page: SharedPage): SharedPlan {
+export function encodePageDescription(
+  description: string,
+  category: MemoCategory,
+  status: PlanStatus
+) {
+  return '__planmeta__:' + category + ':' + status + '\n' + description
+}
+
+export function decodePageDescription(
+  description: string,
+  fallbackCategory: MemoCategory
+) {
+  const match = description.match(pageDescriptionPattern)
+  if (!match) {
+    return {
+      category: fallbackCategory,
+      status: 'active' as PlanStatus,
+      description
+    }
+  }
+
   return {
-    id: `page:${page.slug}`,
-    category: page.slug,
-    title: basePlanTitles[page.slug],
-    description: page.description,
+    category: match[1] as MemoCategory,
+    status: match[2] as PlanStatus,
+    description: match[3]
+  }
+}
+
+export function pageToPlan(page: SharedPage): SharedPlan {
+  const metadata = decodePageDescription(page.description, page.slug)
+  return {
+    id: 'page:' + page.slug,
+    category: metadata.category,
+    title: page.title,
+    description: metadata.description,
     content: page.content,
-    status: 'active',
+    status: metadata.status,
     author: page.updated_by,
     created_at: page.updated_at,
     updated_at: page.updated_at,

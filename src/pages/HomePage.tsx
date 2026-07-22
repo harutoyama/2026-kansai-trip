@@ -118,17 +118,20 @@ function formatSharedUpdate(value: string) {
   }).format(new Date(value));
 }
 
-function PreTripHome({ now }: { now: Date }) {
-  const { plans, planningNotes, configured, loading } = useSharedContent();
+type PreTripHomeProps = {
+  now: Date;
+  useSharedContentHook?: typeof useSharedContent;
+};
+
+export function PreTripHome({
+  now,
+  useSharedContentHook = useSharedContent,
+}: PreTripHomeProps) {
+  const { plans, planningNotes, configured, loading } = useSharedContentHook();
   const daysLeft = Math.max(
     0,
     Math.ceil((tripStartsAt.getTime() - now.getTime()) / 86400000),
   );
-  const syncLabel = loading
-    ? "同期データ読込中"
-    : configured
-      ? "家族間同期中"
-      : "共有設定待ち";
   const usjPlan =
     plans.find((plan) => plan.category === "usj" && plan.source === "page") ??
     plans.find((plan) => plan.category === "usj");
@@ -176,10 +179,6 @@ function PreTripHome({ now }: { now: Date }) {
         <div className="pretrip-hero-overlay" />
         <div className="pretrip-topbar">
           <p>Kansai Journal</p>
-          <span className={configured ? "is-online" : "is-offline"}>
-            <i aria-hidden="true" />
-            {syncLabel}
-          </span>
         </div>
         <div className="pretrip-hero-copy">
           <p>20–25 August 2026 · Family of four</p>

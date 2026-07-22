@@ -2664,3 +2664,22 @@ select:focus-visible {
   }
 }
 /* planning-hub-v2:end */
+
+
+/* planning-edit-regression:start */
+.cinema-tab-strip button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.cinema-tab-strip button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+/* planning-edit-regression:end */

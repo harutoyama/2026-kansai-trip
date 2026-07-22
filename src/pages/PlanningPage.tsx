@@ -4,7 +4,6 @@ import {
   Plus,
   Sparkles,
   Trash2,
-  Wifi,
   WifiOff,
   X
 } from 'lucide-react'
@@ -33,6 +32,12 @@ import {
 } from '../hooks/useSharedContent'
 
 type Filter = 'all' | MemoCategory
+
+type SharedContentHook = typeof useSharedContent
+
+type PlanningPageProps = {
+  useSharedContentHook?: SharedContentHook
+}
 
 type EditorState =
   | { kind: 'plan'; mode: 'create'; plan: null }
@@ -81,7 +86,7 @@ function formatUpdatedAt(value: string) {
   }).format(new Date(value))
 }
 
-export function PlanningPage() {
+export function PlanningPage({ useSharedContentHook = useSharedContent }: PlanningPageProps = {}) {
   const {
     plans,
     planningNotes,
@@ -95,7 +100,7 @@ export function PlanningPage() {
     createPlanningNote,
     updatePlanningNote,
     deletePlanningNote
-  } = useSharedContent()
+  } = useSharedContentHook()
   const [filter, setFilter] = useState<Filter>('all')
   const [editor, setEditor] = useState<EditorState>(null)
   const [planForm, setPlanForm] = useState<PlanInput>(emptyPlanForm)
@@ -237,10 +242,6 @@ export function PlanningPage() {
           <p>FAMILY PLANNING HUB</p>
           <h1>計画</h1>
           <span>採用する作戦と、その判断材料になる候補・調査結果・確認事項を分けて管理します。</span>
-        </div>
-        <div className={`shared-sync-state ${configured ? 'is-online' : 'is-offline'}`}>
-          {configured ? <Wifi size={15} aria-hidden="true" /> : <WifiOff size={15} aria-hidden="true" />}
-          <span>{configured ? '家族間同期中' : '同期未設定'}</span>
         </div>
       </header>
 
@@ -392,12 +393,11 @@ export function PlanningPage() {
 
             {editor.kind === 'plan' ? (
               <>
-                {editingBasePlan && <p className="planning-editor-hint">基本作戦は本文と編集者を更新できます。別案は「作戦を追加」で作成してください。</p>}
+                {editingBasePlan && <p className="planning-editor-hint">基本作戦は削除できません。カテゴリー、タイトル、状態、本文、編集者を更新できます。</p>}
                 <label className="shared-field">
                   <span>カテゴリー</span>
                   <select
                     value={planForm.category}
-                    disabled={editingBasePlan}
                     onChange={(event: ChangeEvent<HTMLSelectElement>) => setPlanForm((current) => ({ ...current, category: event.target.value as MemoCategory }))}
                   >
                     {memoCategories.map((category) => <option value={category} key={category}>{memoCategoryLabels[category]}</option>)}
@@ -407,7 +407,6 @@ export function PlanningPage() {
                   <span>タイトル</span>
                   <input
                     value={planForm.title}
-                    disabled={editingBasePlan}
                     maxLength={80}
                     placeholder="例: USJ混雑時の代替作戦"
                     onChange={(event: ChangeEvent<HTMLInputElement>) => setPlanForm((current) => ({ ...current, title: event.target.value }))}
@@ -417,7 +416,6 @@ export function PlanningPage() {
                   <span>状態</span>
                   <select
                     value={planForm.status}
-                    disabled={editingBasePlan}
                     onChange={(event: ChangeEvent<HTMLSelectElement>) => setPlanForm((current) => ({ ...current, status: event.target.value as PlanStatus }))}
                   >
                     {planStatuses.map((status) => <option value={status} key={status}>{planStatusLabels[status]}</option>)}
