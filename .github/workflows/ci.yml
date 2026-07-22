@@ -34,24 +34,43 @@ jobs:
         run: npm ci
 
       - name: Test
-        run: npm test
+        shell: bash
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          npm test 2>&1 | tee ci-logs/test.log
 
       - name: Lint
-        run: npm run lint
+        shell: bash
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          npm run lint 2>&1 | tee ci-logs/lint.log
 
       - name: Build
-        run: npm run build
+        shell: bash
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          npm run build 2>&1 | tee ci-logs/build.log
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Browser integration test
-        run: npm run test:e2e
+        shell: bash
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee ci-logs/e2e.log
 
-      - name: Upload Playwright report
+      - name: Upload verification diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report
+          name: verification-diagnostics
+          path: |
+            ci-logs
+            playwright-report
+            test-results
           if-no-files-found: ignore
